@@ -15,7 +15,7 @@ cd egap
 make 
 ```
 
-# Run:
+## Run:
 
 To run a test with K=100 strings from INPUT=dataset/input.txt using RAM=1024MB, type:
 

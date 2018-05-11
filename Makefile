@@ -47,11 +47,11 @@ clean:
 ####
 
 INPUT=dataset/pacbio.fasta	#input data
-MEM=10		#memory in MB 
+RAM=10		#memory in MB 
 K=0 			#number of strings
 
 run:
-	./tools/gsacak-64 $(INPUT) $(K) -bm $(MEM)
+	./tools/gsacak-64 $(INPUT) $(K) -bm $(RAM)
 	./gap2 -vEla -A128 -p 4 $(INPUT) 
 	./tools/mergelcp $(INPUT) 5 2
 

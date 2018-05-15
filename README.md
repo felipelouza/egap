@@ -51,15 +51,15 @@ and it is not mandatory to specify the output basename. For example:
   `   eGap -l  file.fasta` 
 this will produce the output files: *file.fasta.bwt*, *files.fasta.2.lcp*
 
-All input and output files are uncompressed. The value is used as the eof symbol in the output BWT.
+All input and output files are uncompressed. The value 0 is used as the eof symbol in the output BWT.
 
 
 ## Command line options
 
-*-h, --help*
+*-h, --help* 
   show usage
 
-*-o, --out*
+*-o, --out* 
   specify basename for output and temporary files
 
 *-l, --lcp*          
@@ -68,12 +68,12 @@ All input and output files are uncompressed. The value is used as the eof symbol
 *-b, --bwt*          
   inputs are bwt files (requires -o)
 
-*-m, --mem*  
+*-m, --mem*     
   specify available memory in MB (def. 4096)
 
-*--lbytes* 
+*--lbytes*      
   number of bytes for each LCP entry (def. 2)
 
-*-v* 
+*-v*       
   verbose output in the log file
  

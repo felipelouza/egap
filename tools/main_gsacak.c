@@ -135,18 +135,14 @@ int main(int argc, char** argv){
  
   size_t chunk_size = I_MAX/(sizeof(int_t)*arrays+1.0);
   if(RAM) chunk_size = RAM/(sizeof(int_t)*arrays+1.0);
-
   printf("max(chunk) = %lu symbols\n", chunk_size);
-
   if(chunk_size>WORD){
-    fprintf(stderr, "##\nERROR: Partition larger than %.1lf GB (%.1lf GB)\nPlease build: make clean; make compile-64; and use gsais-64\n##\n", WORD/pow(2,30), (double)chunk_size/pow(2,30));
-    exit(0);
+    fprintf(stderr, "ERROR: Requested subcollection larger than %.1lf GB (%.1lf GB)\n", WORD/pow(2,30), (double)chunk_size/pow(2,30));
+    if(sizeof(int_t)<8) fprintf(stderr, "Please use %s-64\n", argv[0]);
+    exit(EXIT_FAILURE);
   }
 
   size_t n=0;
- // int_t sum_n=0, total_n=1;
- // uint_t r=0;
-
   FILE* f_in = file_open(c_file, "rb");
   if(!f_in) return 0;
 
@@ -159,13 +155,8 @@ int main(int argc, char** argv){
   printf("K = %" PRIdN "\n", k);
   printf("N = %zu\n", n+1);
 
-  if(n>WORD){
-    fprintf(stderr, "##\nERROR: INPUT larger than %.1lf GB (%.1lf GB)\nPlease build: make clean; make compile-64; and use gsais-64\n##\n", WORD/pow(2,30), n/pow(2,30));
-    exit(0);
-  }
-
   printf("CHUNKS = %" PRIdN "\n", chunks);
-  printf("sizeof(int) = %zu bytes\n", sizeof(int_t));
+  printf("sizeof(int_t) = %zu bytes\n", sizeof(int_t));
   printf("##\n");
   //for(i=0; i<chunks; i++) printf("K[%" PRIdN "] = %" PRIdN "\n", i, K[i]);
 /**/

@@ -1,7 +1,7 @@
 # eGap: BWT and LCP computation for sequence collections in external memory
 
 This software is an implementation of the eGap algorithm described in 
-*External memory BWT and LCP computation for sequence collections with applications* by
+[*External memory BWT and LCP computation for sequence collections with applications*](https://arxiv.org/abs/1805.06821) by
 L. Egidi, F. A. Louza, G. Manzini, and G. P. Telles. Copyright 2017-2018 by the authors. 
 
 

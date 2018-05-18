@@ -27,7 +27,7 @@ make
 ## Quick test
 
 ```sh
-eGap -l dataset/reads.fastq
+./eGap -l dataset/reads.fastq
 ```
 
 This will produce the file `dataset/reads.fastq.bwt` and `dataset/reads.fastq.2.lcp` containing the BWT and LCP array (the latter using 2 byte per entry)

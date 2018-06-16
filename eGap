@@ -37,6 +37,7 @@ gsacak_exe = "tools/gsacak"
 gsacak64_exe = "tools/gsacak-64"
 gap_exe = "gap"
 mergelcp_exe = "tools/mergelcp" 
+shasum_exe = "sha1sum"
 
 
 def main():
@@ -48,6 +49,7 @@ def main():
   parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
   parser.add_argument('-m', '--mem', help='available memory in MB (def. 4096)', default=4096, type=int)
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
+  parser.add_argument('--sum', help='compute output files shasum',action='store_true')
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
@@ -94,13 +96,32 @@ def main():
       if phase3(args,logfile,logfile_name)!=True:
         sys.exit(1)   # fatal error during phase 3 
       print("Elapsed time: {0:.4f}".format(time.time()-start))      
-  
-    print("==== Done")
-    print("Total construction time: {0:.4f}".format(time.time()-start0))      
 
+    # ---- final report
+    elapsed = time.time()-start0
+    outsize = os.path.getsize(args.basename)
+    musecbyte = elapsed*10**6/(outsize)
+    print("==== Done")
+    print("Total construction time: {0:.4f}   usec/byte: {1:.4f}".format(elapsed,musecbyte))
+    # -------- compute hash sums using shasum_exe
+    if args.sum :
+      digest = file_digest(args.basename +".bwt",logfile)
+      print("BWT {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+      digest = file_digest("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes),logfile)
+      print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
     print(">>> End test", file=logfile);
   return
+
   
+# compute hash digest for a file 
+def file_digest(name,logfile):
+    try:
+      hash_command = "{exe} {infile}".format(exe=shasum_exe, infile=name)
+      hashsum = subprocess.check_output(hash_command.split(),stderr=logfile)
+      hashsum = hashsum.decode("utf-8").split()[0]
+    except:
+      hashsum = "Error!" 
+    return hashsum  
 
 # check correctness of number of input file and define basename for output
 def check_input(args):

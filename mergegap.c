@@ -426,7 +426,8 @@ void gap(g_data *g, bool lastRound) {
 
   // main loop
   customInt prefixLength = 1;      
-  int lcpSize = 5 + ((BSIZE>2) ? 3 : BSIZE); // number of bytes for each pos,lcp pair, see writeLcp()
+  // int lcpSize = 5 + ((BSIZE>2) ? 3 : BSIZE); // number of bytes for each pos,lcp pair, see writeLcp()
+  int lcpSize = 5 + BSIZE;   // number of bytes for each pos,lcp pair, see writeLcp()
   int round=0;
   bool merge_completed; 
   do {
@@ -476,7 +477,7 @@ void gap(g_data *g, bool lastRound) {
     assert(lastRound);
     // close lcp file (and merge them?)
     close_unsortedLCP_files(g);
-    if(g->verbose>0) printf("Remind to run lcpmerge to obtain the final LCP array\n"); 
+    if(g->verbose>0) printf("Remind to run mergelcp to obtain the final LCP array\n"); 
   }
 
   // free B array 

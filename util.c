@@ -151,11 +151,15 @@ void writeLcp(customInt k, uint32_t lcp, g_data *g)
 {
   assert(g->unsortedLcp!=NULL);
   assert(lcp <= MAX_LCP_SIZE);
-  if(lcp >= (1ULL<<24)) die("LCP values too large"); // lcp at most 3 bytes
-  assert(k<(1ULL<<40)); 
-  int bsize = (BSIZE>2) ? 3 : BSIZE;
-  uint64_t b = (((uint64_t )k)<<(8*bsize)) | lcp;  // save index and  lcp in 5+BSIZE bytes 
-  size_t e = fwrite(&b,5+bsize,1,g->unsortedLcp);  
+  //!! No longer valid if(lcp >= (1ULL<<24)) die("LCP values too large"); // lcp at most 3 bytes
+  assert(k<(1ULL<<40)); // 5 bytes for the position 
+  //!!int bsize = (BSIZE>2) ? 3 : BSIZE;
+  int bsize = BSIZE;
+  //!! uint64_t b = (((uint64_t )k)<<(8*bsize)) | lcp;  // save index and  lcp in 5+BSIZE bytes 
+  //!!size_t e = fwrite(&b,5+bsize,1,g->unsortedLcp);
+  size_t e = fwrite(&lcp,bsize,1,g->unsortedLcp);
+  if(e!=1) die(__func__);
+  e = fwrite(&k,5,1,g->unsortedLcp);
   if(e!=1) die(__func__);
 }
 
@@ -163,11 +167,15 @@ void writeLcp(customInt k, uint32_t lcp, g_data *g)
 void writeLcp_EOF(uint64_t size, g_data *g)
 {
   assert(g->unsortedLcp!=NULL && g->unsortedLcp_size!=NULL);
-  int bsize = (BSIZE>2) ? 3 : BSIZE;
+  //!! int bsize = (BSIZE>2) ? 3 : BSIZE;
+  int bsize = BSIZE;
 
   // write eof 
   uint64_t b = ~0ULL; // all 1's 
-  size_t e = fwrite(&b,5+bsize,1,g->unsortedLcp);  
+  //!! size_t e = fwrite(&b,5+bsize,1,g->unsortedLcp);  
+  size_t e = fwrite(&b,bsize,1,g->unsortedLcp);  
+  if(e!=1) die(__func__);
+  e = fwrite(&b,5,1,g->unsortedLcp);  
   if(e!=1) die(__func__);
   // write size of complete LCP segment 
   e = fwrite(&size,8,1,g->unsortedLcp_size);  

@@ -8,6 +8,9 @@
 #include <string.h>
 #include <assert.h>
 
+
+typedef unsigned __int128 uint128_t;
+
 static const uint64_t mask[9] = { 
 0,
 0xFF,             // 1 byte
@@ -23,12 +26,12 @@ static const uint64_t mask[9] = {
 //#define pos(i) ((i&mask[h->pos_size]))
 //#define lcp(i) ((i>>((h->pos_size)*8)))
 
-#define pos(i) ((i>>((h->lcp_size)*8)))
-#define lcp(i) ((i&mask[h->lcp_size]))
+#define pos(i) ((uint64_t)(i>>((h->lcp_size)*8)))
+#define lcp(i) ((uint64_t)(i&mask[h->lcp_size]))
 
 //sorting key is <pos>
-#define key(i) ((uint64_t)((h->heap[i]->buffer[h->heap[i]->idx])))
-#define MAX_KEY ((uint64_t)(~0ULL)&mask[h->lcp_size+h->pos_size])
+#define key(i) ((uint128_t)((h->heap[i]->buffer[h->heap[i]->idx])))
+#define MAX_KEY ((uint128_t)(~0ULL)&mask[h->lcp_size+h->pos_size])
 
 #define heap_size(h) ((h)->size)
 
@@ -52,7 +55,8 @@ static const uint64_t mask[9] = {
 //int pos, lcp;
 //} pair;
 
-typedef uint64_t pair;
+//typedef uint64_t pair;
+typedef uint128_t pair;
 
 // struct representing a file of [position|lcpValue] pairs
 typedef struct heap_node{

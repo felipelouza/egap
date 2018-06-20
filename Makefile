@@ -52,8 +52,8 @@ K=0 			#number of strings
 
 run:
 	./tools/gsacak-64 $(INPUT) $(K) -bm $(RAM)
-	./gap2 -vEla -A128 -g128 $(INPUT) 
-	./tools/mergelcp $(INPUT) 5 2
+	./gap4 -vEla -A128 -g128 $(INPUT) 
+	./tools/mergelcp $(INPUT) 4 4
 
 ####
 

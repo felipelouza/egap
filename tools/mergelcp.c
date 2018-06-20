@@ -13,7 +13,7 @@
 #endif
 
 #ifndef CHECK
-#define CHECK 0
+#define CHECK 2
 #endif
 
 #ifndef HEAP_SIZE
@@ -47,7 +47,7 @@ int heap_sort_level(heap *h, FILE *f_lcp, size_t *sum, char* c_file, int level){
   #endif
   
   #if CHECK == 1
-    size_t curr=0;
+    uint64_t curr=0;
   #endif
   
   #if DEBUG
@@ -79,7 +79,7 @@ int heap_sort_level(heap *h, FILE *f_lcp, size_t *sum, char* c_file, int level){
     #endif
     
     #if DEBUG
-      if(level) printf("<%lu, %lu [%lu]> ", lcp(tmp), pos(tmp), tmp);
+      if(level) printf("<%lu, %lu [%llu]> ", lcp(tmp), pos(tmp), tmp);
       else printf("%lu, ", pos(tmp));
     #endif
   }
@@ -120,6 +120,8 @@ void usage(char *name){
 
 int main(int argc, char **argv) {                   
   
+
+printf("%zu bytes\n", sizeof(uint128_t));
   extern char *optarg;
   extern int optind, opterr, optopt;
   
@@ -152,7 +154,7 @@ int main(int argc, char **argv) {
     pos_size=atoi(argv[optind++]);
     lcp_size=atoi(argv[optind++]);
     
-    if(pos_size+lcp_size>8) exit(0); 
+    if(pos_size+lcp_size>16) exit(0); 
     if(!pos_size) exit(0); 
     if(!lcp_size) exit(0); 
   }

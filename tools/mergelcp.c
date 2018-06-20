@@ -13,7 +13,7 @@
 #endif
 
 #ifndef CHECK
-#define CHECK 2
+#define CHECK 0
 #endif
 
 #ifndef HEAP_SIZE

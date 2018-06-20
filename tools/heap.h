@@ -9,9 +9,9 @@
 #include <assert.h>
 
 
-typedef unsigned __int128 uint128_t;
+typedef __uint128_t uint128_t;
 
-static const uint64_t mask[9] = { 
+static const uint128_t mask[9] = { 
 0,
 0xFF,             // 1 byte
 0xFFFF,           // 2 bytes
@@ -23,15 +23,13 @@ static const uint64_t mask[9] = {
 0xFFFFFFFFFFFFFFFF// 8
 };
 
-//#define pos(i) ((i&mask[h->pos_size]))
-//#define lcp(i) ((i>>((h->pos_size)*8)))
-
 #define pos(i) ((uint64_t)(i>>((h->lcp_size)*8)))
 #define lcp(i) ((uint64_t)(i&mask[h->lcp_size]))
 
 //sorting key is <pos>
 #define key(i) ((uint128_t)((h->heap[i]->buffer[h->heap[i]->idx])))
-#define MAX_KEY ((uint128_t)(~0ULL)&mask[h->lcp_size+h->pos_size])
+//#define MAX_KEY ((uint128_t)(~0ULL)&mask[h->pos_size])
+#define MAX_KEY ((uint128_t)(((mask[8]<<64)|(~0ULL))>>((16-(h->pos_size+h->lcp_size))*8)))
 
 #define heap_size(h) ((h)->size)
 

@@ -120,8 +120,6 @@ void usage(char *name){
 
 int main(int argc, char **argv) {                   
   
-
-printf("%zu bytes\n", sizeof(uint128_t));
   extern char *optarg;
   extern int optind, opterr, optopt;
   

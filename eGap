@@ -38,6 +38,7 @@ gsacak64_exe = "tools/gsacak-64"
 gap_exe = "gap"
 mergelcp_exe = "tools/mergelcp" 
 shasum_exe = "sha1sum"
+POS_SIZE = 5    # must be equal to POS_SIZE in config.h
 
 
 def main():
@@ -194,17 +195,22 @@ def phase1(args,logfile, logfile_name):
 # phase2: 
 # merging of BWTs and computation of LCP and DA arrays
 def phase2(args,logfile, logfile_name):
-  if(os.path.getsize(args.basename + ".bwt")> args.mem*1024*1024):
-    algotype = 128   # input larger than assigned ram: external algorithm 
+  bwt_size=os.path.getsize(args.basename + ".bwt")
+  if(bwt_size > args.mem*1024*1024):
+    # input larger than assigned ram: external algorithm 
+    options = "-A128 -g128 -vaE"
+  elif 3 * bwt_size >  args.mem*1024*1024:
+    # input fits in ram but not too small: semi-external algorithm
+    options = "-A8 -g8 -vaE"
   else:
-    algotype = 8     # input gits in ram: semi-external algorithm
+    # input 3 times smaller than assigned ram: internal algorithm 
+    options = "-g256 -vaT"
   exe = os.path.join(args.egap_dir,gap_exe)
-  options = "-vaE"
   if(args.lcp): options += "l"  # generate lcp
   if(args.da): options += "d"   # generate da
   if(args.v): options += "v"    # increase verbosity level
-  command = "{exe}{byts} {opts} -A {algo} -g {algo} {ibase}".format(exe=exe, 
-              byts = args.lbytes, opts=options, ibase=args.basename, algo=algotype)
+  command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
+              byts = args.lbytes, opts=options, ibase=args.basename)
   print("==== gap\n Command:", command)
   return execute_command(command,logfile,logfile_name)
 
@@ -214,7 +220,7 @@ def phase2(args,logfile, logfile_name):
 def phase3(args,logfile, logfile_name):
   exe = os.path.join(args.egap_dir,mergelcp_exe)
   command = "{exe} -k 256 {ibase} {pos} {lcp}".format(exe=exe, 
-              ibase=args.basename, pos=5,lcp=args.lbytes)
+              ibase=args.basename, pos=POS_SIZE,lcp=args.lbytes)
   print("==== mergeLcp\n Command:", command)
   return execute_command(command,logfile,logfile_name)
   

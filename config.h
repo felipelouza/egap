@@ -45,7 +45,7 @@ typedef uint64_t customInt;
 #define CUSTOM_FORMAT "%"PRIu64
 #define MAX_OUTPUT_SIZE 0xFFFFFFFFFFFFFFFEULL
 
-// number of bytes used to represent a position in the BWT's for mergeLcp 
+// number of bytes used to represent a position in the BWT's for irrelevant blocks and mergeLcp 
 #define POS_SIZE 5
 
 // type used to represent LCP values (B array)

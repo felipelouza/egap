@@ -254,9 +254,9 @@ int main(int argc, char *argv[]) {
 
 
 /**
- * create output bwt file and write the content of g->bwt[0] (alrady remapped 
+ * create output bwt file and write the content of g->bwt[0] (already remapped 
  * and unsqueezed) to it.
- * Only called if BWT was not mmaped becaues in that case the output overwrites the input 
+ * Only called if BWT was not mmapped becaues in that case the output overwrites the input 
  * */
 static void writeOutputBWT(g_data *g, char *path, bool hm)
 {
@@ -266,7 +266,7 @@ static void writeOutputBWT(g_data *g, char *path, bool hm)
   if(g->verbose>1) puts("Writing output files");
   assert(!g->mmapBWT && !g->extMem);
   // open bwt output file 
-  snprintf(filename,Filename_size,"%s.out.%s",path,hm?HM_BWT_EXT:BWT_EXT);
+  snprintf(filename,Filename_size,"%s.%s",path,hm?HM_BWT_EXT:BWT_EXT);
   FILE *f = fopen(filename,"wb");
   if(f==NULL) die(__func__);
   size_t w = fwrite(g->bws[0], sizeof(symbol), g->mergeLen, f);

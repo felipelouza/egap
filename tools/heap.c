@@ -159,7 +159,6 @@ void  read_buffer(heap *h, heap_node *node){
 //  fseek(h->f_in, node->seek*sizeof(pair), SEEK_SET);
     fseek(h->f_in, node->seek*(h->pos_size+h->lcp_size), SEEK_SET);
 
-//  fread(node->buffer, h->pos_size+h->lcp_size, INPUT_SIZE, h->f_in); 
     int i;
     for(i=0; i<INPUT_SIZE; i++){
       node->buffer[i]=0;

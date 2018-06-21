@@ -31,8 +31,7 @@ FILE* file_open(char *c_file, const char * c_mode){
   FILE* f_in;
   
   f_in = fopen(c_file, c_mode);
-  if (!f_in) perror ("file_open");
-
+  if (!f_in) {perror(__func__); exit(EXIT_FAILURE);}
   fseek(f_in, 0, SEEK_SET);
   
 return f_in;
@@ -42,7 +41,7 @@ return f_in;
 int file_close(FILE* f_in){
   
   fclose(f_in);
-  if (!f_in) perror ("file_close");
+  if (!f_in) {perror (__func__); exit(EXIT_FAILURE);}
   
 return 0;
 }
@@ -92,7 +91,7 @@ char* file_load(FILE* f_in) {
   
   /*Read one line*/
   size = getline(&c_aux, &len, f_in);
-  if (size == -1) perror("file_load");
+  if (size == -1) {perror(__func__); exit(EXIT_FAILURE);}
 
   /*Copy line to c_buffer*/
   char *c_buffer = (char*) malloc((size+1)*sizeof(char));
@@ -267,9 +266,9 @@ int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
     if (size == -1){//EOF
       (*k) = i+1;
       free(buf);
-			d++;
-			sum+=p+1;
-			(*n) += p+1;
+      d++;
+      sum+=p+1;
+      (*n) += p+1;
       break;   
       //return 0;
     }
@@ -434,7 +433,7 @@ int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t *chu
 
 /* .ext
  * .txt   - strings per line
- * .fasta - strings separated by '>' line
+ * .fa .fasta - strings separated by '>' line
  * .fastq - strings separated by four lines
  */
 
@@ -444,15 +443,15 @@ int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t *chu
   if(strcmp(type,"txt") == 0)
     K = count_multiple_txt(f_in, k, chunk_size, n, chunks);
 
-  else if(strcmp(type,"fasta") == 0)
+  else if(strcmp(type,"fasta") == 0 || strcmp(type,"fa")==0 )
     K = count_multiple_fasta(f_in, k, chunk_size, n, chunks);
 
   else if(strcmp(type,"fastq") == 0)
     K = count_multiple_fastq(f_in, k, chunk_size, n, chunks);
 
   else{
-    printf("Error: file not recognized (.txt, .fasta, .fastq)\n");
-    return 0;
+    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq)\n");
+    exit(EXIT_FAILURE);
   }
 
   //sets the pointer to the beginning of the file
@@ -467,7 +466,7 @@ char** file_load_multiple_chunks(char* c_file, int_t k, size_t *n, FILE *f_in) {
 
 /* .ext
  * .txt   - strings per line
- * .fasta - strings separated by '>' line
+ * .fa .fasta - strings separated by '>' line
  * .fastq - strings separated by four lines
  */
 
@@ -477,15 +476,15 @@ char** file_load_multiple_chunks(char* c_file, int_t k, size_t *n, FILE *f_in) {
   if(strcmp(type,"txt") == 0)
     c_buffer = load_multiple_txt(f_in, k, n);
 
-  else if(strcmp(type,"fasta") == 0)
+  else if(strcmp(type,"fasta") == 0 || strcmp(type,"fa")==0 )
     c_buffer = load_multiple_fasta(f_in, k, n);
 
   else if(strcmp(type,"fastq") == 0)
     c_buffer = load_multiple_fastq(f_in, k, n);
 
   else{
-    printf("Error: file not recognized (.txt, .fasta, .fastq)\n");
-    return 0;
+    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq)\n");
+    exit(EXIT_FAILURE);
   }
 
 return c_buffer;
@@ -496,7 +495,7 @@ char** file_load_multiple(char* c_file, int k, size_t *n) {
 
 /* .ext
  * .txt   - strings per line
- * .fasta - strings separated by '>' line
+ * .fa .fasta - strings separated by '>' line
  * .fastq - strings separated by four lines
  */
 
@@ -509,14 +508,14 @@ char** file_load_multiple(char* c_file, int k, size_t *n) {
   if(strcmp(type,"txt") == 0)
     c_buffer = load_multiple_txt(f_in, k, n);
 
-  else if(strcmp(type,"fasta") == 0)
+  else if(strcmp(type,"fasta") == 0 || strcmp(type,"fa")==0 )
     c_buffer = load_multiple_fasta(f_in, k, n);
 
   else if(strcmp(type,"fastq") == 0)
     c_buffer = load_multiple_fastq(f_in, k, n);
   else{
-    printf("Error: file not recognized (.txt, .fasta, .fastq)\n");
-    return 0;
+    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq)\n");
+    exit(EXIT_FAILURE);
   }
 
   fclose(f_in);

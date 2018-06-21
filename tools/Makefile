@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS += -Wall 
 CFLAGS += -D_FILE_OFFSET_BITS=64 -m64 -O3 -fomit-frame-pointer -Wno-char-subscripts 
 
-LFLAGS = -lm -lrt -ldl
+LFLAGS = -lm -ldl
 DEBUG	= 0
 
 DEFINES = -DDEBUG=$(DEBUG) 

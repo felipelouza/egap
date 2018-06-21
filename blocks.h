@@ -72,52 +72,6 @@ static void writeBlock(solidBlock *s, solidBlockFile *sf);
 
 // --- debug functions
 
-// scan the list of irrelevant blocks and make sure there are no mergeable
-// blocks. If verbose report the number of blocks by type 
-// NOTE: this is essentially a development/debug function
-// to be changed for use with solidBlockFile
-customInt checkBlocks(solidBlock *b, customInt pfx, g_data *g, bool lastRound)
-{
-#if 0 
-  customInt tot=0, mergeable=0, small_solid=0;
-
-  while(b!=NULL) {
-    tot++;
-    if(b->nextBlock!=NULL && b->endsAt == b->nextBlock->beginsAt) 
-      mergeable++; 
-    if(b->endsAt-b->beginsAt<= SMALLSOLID_LIMIT) small_solid++;
-    b = b->nextBlock;  // check what comes after
-  }
-  if(g->verbose>2 || (g->verbose>1 && lastRound)) 
-    printf("Lcp: "CUSTOM_FORMAT"  Blocks: "CUSTOM_FORMAT" total, "CUSTOM_FORMAT" small_solid\n", pfx-1, tot,small_solid);
-  if(mergeable!=0)
-    printf("Lcp: "CUSTOM_FORMAT"  Fatal error: "CUSTOM_FORMAT" mergeable blocks found\n",pfx-1,mergeable);
-  return mergeable;
-#else
-  (void) b, (void) pfx, (void) g, (void) lastRound; 
-  return 0;   
-#endif
-}
-
-// debug only
-void showIrrelevants(solidBlock *b)
-{
-  #if 0
-  printf("Irrelevants: ");
-  while(b!=NULL) {
-    assert(b->occ!=NULL);
-    if (b->endsAt - b->beginsAt <= SMALLSOLID_LIMIT) 
-      printf("("CUSTOM_FORMAT" "CUSTOM_FORMAT") ",b->beginsAt,b->endsAt);
-    else 
-      printf("["CUSTOM_FORMAT" "CUSTOM_FORMAT"] ",b->beginsAt,b->endsAt);
-    b = b->nextBlock;
-  }
-  puts("END");
-#else
-  (void) b; 
-#endif  
-}
-
 // debug only: show occ's
 void showBlock(solidBlock *b, g_data *g, int num)
 {
@@ -759,12 +713,12 @@ static solidBlock *readBlock(solidBlockFile *sf)
     newB->occ = get_occ(sf);
     memset(newB->occ,0,sf->occ_size*sizeof(customInt));// zero all values
     uint8_t *byteBuffer = (uint8_t *) buffer; // transform to an uint8_t buffer
-    e = fread(byteBuffer,5,sf->occ_size,sf->fin); // read 5 int for customInt
+    e = fread(byteBuffer,POS_SIZE,sf->occ_size,sf->fin); // read POS_SIZE bytes for customInt
     if(e!=sf->occ_size) die("tmp file read error in readBlock (3)");
     // fill newB->occ using five bytes for entry
     for(int j=0;j<sf->occ_size;j++) {
-      for(int i=0;i<5;i++) 
-        newB->occ[j] |= ((customInt) byteBuffer[j*5+i]) << (8*i);  
+      for(int i=0;i<POS_SIZE;i++) 
+        newB->occ[j] |= ((customInt) byteBuffer[j*POS_SIZE+i]) << (8*i);  
     }
   }
   newB->nextBlock=NULL;
@@ -777,7 +731,6 @@ static void writeBlock(solidBlock *s, solidBlockFile *sf)
   assert(s!=NULL);
   assert(sf!=NULL && sf->fout!=NULL);
   customInt buffer[SIZE_OF_ALPHABET+MAX_NUMBER_OF_BWTS];
-  // printf("Writing [%ld %ld]\n",s->beginsAt,s->endsAt); //!!!!!!
   buffer[0] = s->beginsAt;
   buffer[1] = s->endsAt;
   int e = fwrite(buffer,sizeof(customInt),2,sf->fout);
@@ -791,10 +744,14 @@ static void writeBlock(solidBlock *s, solidBlockFile *sf)
     uint8_t *byteBuffer = (uint8_t *) buffer;
     // fill newB->occ using five bytes for entry
     for(int j=0;j<sf->occ_size;j++) {
-      for(int i=0;i<5;i++)
-        byteBuffer[j*5+i] = (s->occ[j]>>(8*i)) & 0xFF;  
+      if(s->occ[j]>= (1Ull<<(8*POS_SIZE))) {
+        fprintf(stderr,"%d bytes per position are not enough. Increase POS_SIZE and recompile\n",POS_SIZE); 
+        exit(EXIT_FAILURE);
+      }
+      for(int i=0;i<POS_SIZE;i++)
+        byteBuffer[j*POS_SIZE+i] = (s->occ[j]>>(8*i)) & 0xFF;  
     }
-    e= fwrite(byteBuffer,5,sf->occ_size,sf->fout); // read 5 int for customInt
+    e= fwrite(byteBuffer,POS_SIZE,sf->occ_size,sf->fout); // read POS_SIZE bytes for customInt
     if(e!=sf->occ_size) die("tmp file write error in writeBlock (3)");
   }
   block_free(s,sf);

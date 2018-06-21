@@ -36,11 +36,11 @@ heap* heap_alloc(int n, char* file_name, int level, int pos_size, int lcp_size) 
   strcpy(h->file_name, file_name);
  
   h->f_in = fopen(h->file_name, "rb"); 
-  if (!h->f_in) perror ("file_open"); 
+  if (!h->f_in) {perror ("fopen(heap_alloc)");  exit(EXIT_FAILURE);}
 
   #if OUTPUT_BUFFER
     h->out_buffer = (pair*) malloc((OUTPUT_SIZE+1)*sizeof(pair));
-    if(!h->out_buffer) perror("malloc(heap_alloc)");  
+    if(!h->out_buffer) {perror("malloc(heap_alloc)");   exit(EXIT_FAILURE);}
     h->out_idx = 0;
   #endif
 

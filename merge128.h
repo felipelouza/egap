@@ -263,7 +263,7 @@ void gap128(g_data *g, bool lastRound) {
 
   // main loop
   uint32_t prefixLength = 1;
-  int lcpSize = 5 + ((BSIZE>2) ? 3 : BSIZE); // number of bytes for each pos,lcp pair, see writeLcp()
+  int lcpSize = POS_SIZE + BSIZE;   // number of bytes for each pos,lcp pair, see writeLcp()
   int round=0;
   bool merge_completed;
   do {

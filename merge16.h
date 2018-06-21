@@ -245,8 +245,6 @@ void gap16(g_data *g, bool lastRound) {
       bool mergeChanged = false; // the Z vector has changed in this iteration (used when g->bwtOnly)
       ibList->fout = gap_tmpfile(g->outPath);
       merge_completed=addCharToPrefix16(ibList,liquid,prefixLength,&mergeChanged,round,g);
-      // assert(checkBlocks(ibList,prefixLength,g,lastRound)==0); //\\ check no blocks are mergeable
-      // if (g->verbose>2 && lastRound) showIrrelevants(ibList);
       if (g->verbose>1 && lastRound) {
         printf("Lcp: "CUSTOM_FORMAT". Memory: %zu peak, %zu current, %.4lf/%.4lf bytes/symbol\n", 
              prefixLength-1, malloc_count_peak(),

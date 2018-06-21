@@ -14,17 +14,19 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <limits.h>
 #include <inttypes.h>
 
 // comment to prevent the use of madvise
 #define USE_MMAP_ADVISE 1
 
 // size of buffer for building file names
-#define Filename_size 500
+#define Filename_size PATH_MAX
 // size of all buffers for producer/consumer threads
 #define Threads_buf_size 20
-// size of eaech buffer for external memory newMerge array
+// size of each buffer for external memory newMerge array
 #define COLOR_WBUFFER_SIZE (1024*1024)
+
 
 // type used to represent an input symbol
 typedef unsigned char symbol;
@@ -42,6 +44,9 @@ typedef uint16_t smallSolidInt;
 typedef uint64_t customInt;
 #define CUSTOM_FORMAT "%"PRIu64
 #define MAX_OUTPUT_SIZE 0xFFFFFFFFFFFFFFFEULL
+
+// number of bytes used to represent a position in the BWT's for mergeLcp 
+#define POS_SIZE 5
 
 // type used to represent LCP values (B array)
 #ifndef BSIZE

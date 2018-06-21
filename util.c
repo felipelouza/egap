@@ -145,21 +145,19 @@ void open_unsortedLCP_files(g_data *g)
 }
 
 // write a lcp/position pair to g->unsortedLcp
-// uses min(BSIZE,3) bytes for the LCP value and 5 (for now) bytes for the position
+// uses BSIZE bytes for the LCP value POS_SIZE bytes (currently 5) for the position
 // everything is valid for little endian only! 
 void writeLcp(customInt k, uint32_t lcp, g_data *g)
 {
   assert(g->unsortedLcp!=NULL);
   assert(lcp <= MAX_LCP_SIZE);
-  //!! No longer valid if(lcp >= (1ULL<<24)) die("LCP values too large"); // lcp at most 3 bytes
-  assert(k<(1ULL<<40)); // 5 bytes for the position 
-  //!!int bsize = (BSIZE>2) ? 3 : BSIZE;
-  int bsize = BSIZE;
-  //!! uint64_t b = (((uint64_t )k)<<(8*bsize)) | lcp;  // save index and  lcp in 5+BSIZE bytes 
-  //!!size_t e = fwrite(&b,5+bsize,1,g->unsortedLcp);
-  size_t e = fwrite(&lcp,bsize,1,g->unsortedLcp);
+  if(k>=(1ULL<<(8*POS_SIZE))) { // at most pos_size bytes for the position
+    fprintf(stderr,"%d bytes per position are not enough. Increase POS_SIZE and recompile\n",POS_SIZE); 
+    exit(EXIT_FAILURE);
+  } 
+  size_t e = fwrite(&lcp,BSIZE,1,g->unsortedLcp);
   if(e!=1) die(__func__);
-  e = fwrite(&k,5,1,g->unsortedLcp);
+  e = fwrite(&k,POS_SIZE,1,g->unsortedLcp);
   if(e!=1) die(__func__);
 }
 
@@ -167,17 +165,14 @@ void writeLcp(customInt k, uint32_t lcp, g_data *g)
 void writeLcp_EOF(uint64_t size, g_data *g)
 {
   assert(g->unsortedLcp!=NULL && g->unsortedLcp_size!=NULL);
-  //!! int bsize = (BSIZE>2) ? 3 : BSIZE;
-  int bsize = BSIZE;
 
-  // write eof 
+  // write eof to .pair.lcp file
   uint64_t b = ~0ULL; // all 1's 
-  //!! size_t e = fwrite(&b,5+bsize,1,g->unsortedLcp);  
-  size_t e = fwrite(&b,bsize,1,g->unsortedLcp);  
+  size_t e = fwrite(&b,BSIZE,1,g->unsortedLcp);  
   if(e!=1) die(__func__);
-  e = fwrite(&b,5,1,g->unsortedLcp);  
+  e = fwrite(&b,POS_SIZE,1,g->unsortedLcp);  
   if(e!=1) die(__func__);
-  // write size of complete LCP segment 
+  // write size of complete LCP segment to .size.lcp file 
   e = fwrite(&size,8,1,g->unsortedLcp_size);  
   if(e!=1) die(__func__);
 }

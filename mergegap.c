@@ -426,14 +426,13 @@ void gap(g_data *g, bool lastRound) {
 
   // main loop
   customInt prefixLength = 1;      
-  // int lcpSize = 5 + ((BSIZE>2) ? 3 : BSIZE); // number of bytes for each pos,lcp pair, see writeLcp()
-  int lcpSize = 5 + BSIZE;   // number of bytes for each pos,lcp pair, see writeLcp()
+  int lcpSize = POS_SIZE + BSIZE;   // number of bytes for each pos,lcp pair: see writeLcp()
   int round=0;
   bool merge_completed; 
   do {
     prefixLength+= 1;
-    if(prefixLength>MAX_LCP_SIZE && g->lcpMerge) {fprintf(stderr,"LCP too large\n");die(__func__);}
-    if(g->lcpCompute && prefixLength-2>MAX_LCP_SIZE) {fprintf(stderr,"LCP too large (2)\n");die(__func__);}
+    if(prefixLength>MAX_LCP_SIZE && g->lcpMerge) {fprintf(stderr,"LCP too large (use --lbytes=4)\n");exit(EXIT_FAILURE);}
+    if(g->lcpCompute && prefixLength-2>MAX_LCP_SIZE) {fprintf(stderr,"LCP too large (2) (use --lbytes=4)\n");exit(EXIT_FAILURE);}
     bool mergeChanged = false; // the Z vector has changed in this iteration (used when g->bwtOnly)
     ibList->fout = gap_tmpfile(g->outPath);
     merge_completed=addCharToPrefix(ibList,liquid,prefixLength,&mergeChanged,round,g);

@@ -2,6 +2,7 @@
 #include <stdlib.h>                                 
 #include <string.h>   
 #include <getopt.h>
+#include <limits.h>
                     
 #include "heap.h"
 #include "src/malloc_count.h"
@@ -27,7 +28,7 @@ FILE* file_open(char *c_file, const char * c_mode){
   
   FILE* f_in;
   f_in = fopen(c_file, c_mode);
-  if (!f_in) perror ("file_open");
+  if (!f_in) {perror (__func__); exit(EXIT_FAILURE);}
   fseek(f_in, 0, SEEK_SET);
   
 return f_in;
@@ -38,7 +39,7 @@ return f_in;
 int heap_sort_level(heap *h, FILE *f_lcp, size_t *sum, char* c_file, int level){
   
   #if CHECK == 2
-    char c_pos[500];
+    char c_pos[PATH_MAX];
     FILE* f_pos=NULL;
     if(!level){
       sprintf(c_pos, "%s.pos.lcp", c_file);
@@ -152,9 +153,14 @@ int main(int argc, char **argv) {
     pos_size=atoi(argv[optind++]);
     lcp_size=atoi(argv[optind++]);
     
-    if(pos_size+lcp_size>16) exit(0); 
-    if(!pos_size) exit(0); 
-    if(!lcp_size) exit(0); 
+    if(pos_size+lcp_size>16) {
+      fprintf(stderr,"POS_SIZE+LCP_SIZE can be at most 16\n");
+      exit(EXIT_FAILURE);
+    } 
+    if(pos_size<=0 || lcp_size<=0) {
+      fprintf(stderr,"Both POS_SIZE LCP_SIZE must be at least 1\n");
+      exit(EXIT_FAILURE);
+    } 
   }
   else{
     usage(argv[0]);
@@ -162,12 +168,12 @@ int main(int argc, char **argv) {
   
   if(heap_size<2){
     puts("ERROR: k must be larger than 1");
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   
   //config
-  char c_lcp[500], c_size[500];
-  char c_lcp_multi[500], c_size_multi[500]; //multilevel
+  char c_lcp[PATH_MAX], c_size[PATH_MAX];
+  char c_lcp_multi[PATH_MAX], c_size_multi[PATH_MAX]; //multilevel
   
   sprintf(c_lcp, "%s.pair.lcp",  c_file);
   sprintf(c_size, "%s.size.lcp", c_file);
@@ -370,13 +376,13 @@ int main(int argc, char **argv) {
     fclose(f_lcp);
   #endif
 
-	/**/
+  /**/
   sprintf(c_lcp, "%s.pair.lcp",  c_file);
   sprintf(c_size, "%s.size.lcp", c_file);
 
-	remove(c_lcp);
-	remove(c_size);
-	/**/
+  remove(c_lcp);
+  remove(c_size);
+  /**/
 
 
 return 0;

@@ -16,7 +16,9 @@
 #include <semaphore.h>
 #include <limits.h>
 #include <inttypes.h>
+#ifdef __linux__
 #include <linux/limits.h>
+#endif
 
 // comment to prevent the use of madvise
 #define USE_MMAP_ADVISE 1
@@ -26,6 +28,7 @@
 #define PATH_MAX 4096
 #endif
 #define Filename_size PATH_MAX
+
 // size of all buffers for producer/consumer threads
 #define Threads_buf_size 20
 // size of each buffer for external memory newMerge array

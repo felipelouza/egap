@@ -21,6 +21,9 @@
 #define USE_MMAP_ADVISE 1
 
 // size of buffer for building file names
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 #define Filename_size PATH_MAX
 // size of all buffers for producer/consumer threads
 #define Threads_buf_size 20

@@ -16,6 +16,7 @@
 #include <semaphore.h>
 #include <limits.h>
 #include <inttypes.h>
+#include <linux/limits.h>
 
 // comment to prevent the use of madvise
 #define USE_MMAP_ADVISE 1

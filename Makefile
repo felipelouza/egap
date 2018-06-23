@@ -11,7 +11,7 @@ CFILES = gap.c util.c io.c mergegap.c mergehm.c alphabet.c malloc_count/malloc_c
 CFILES0 = gap.c util.c io.c mergegap.c mergehm.c alphabet.c malloc_count/malloc_count0.c threads.c multiround.c
 
 
-EXECS = gap gap1 gap2 gap4
+EXECS = gap gap1 gap2 gap4 unbwt
 
 # targets not producing a file declared phony
 .PHONY: all tools clean tarfile

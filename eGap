@@ -16,9 +16,9 @@ as file?.bwt
  
 If you don't have the BWTs then your input must consists of a single file
 with extension 
-  .fasta  (one input document per sequence)
-  .fastq  (one input document per sequence)
-  .txt    (one input document for line)
+  .fasta/.fa (one input document per sequence)
+  .fastq     (one input document per sequence)
+  .txt       (one input document per line)
 and it is not mandatory to specify the output basename. For example:
   {exe} -l  file.fasta 
 this will produce the output files: file.fasta.bwt, files.fasta.2.lcp
@@ -109,13 +109,15 @@ def main():
     if args.sum :
       digest = file_digest(args.basename +".bwt",logfile)
       print("BWT {exe}: {digest}".format(exe=shasum_exe, digest=digest))
-      digest = file_digest("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes),logfile)
-      print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+      if args.lcp:
+        digest = file_digest("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes),logfile)
+        print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
     # -------- delete output files if required 
     if (args.sum and args.delete):
       try:
         os.remove(args.basename+".bwt")
-        os.remove("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes))
+        if args.lcp:
+          os.remove("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes))
       except OSError as  e:                 
         # if failed, report it back to the user and stop
         print ("Error: %s - %s." % (e.filename,e.strerror))      

@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
         g.lcpMerge = true;          // merge lcp values 
         g.bwtOnly=false; break;  
       case 'x':
-        g.mwXMerge=false; break;      // do not use external multiway merge sort for lcp values
+        g.mwXMerge=false; break;      // do not use external multiway merge sort for computing lcp values
       case 'd':
         g.outputDA=true; break;       // output Document Array (for last iteration only) 
       case 'm':

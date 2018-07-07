@@ -21,7 +21,7 @@ with extension
   .txt       (one input document per line)
 and it is not mandatory to specify the output basename. For example:
   {exe} -l  file.fasta 
-this will produce the output files: file.fasta.bwt, files.fasta.2.lcp
+this will produce the output files: file.fasta.bwt, file.fasta.2.lcp
 
 The option --lbytes specifies the number of bytes used for each LCP entry
 and such number becomes part of the lcp file name.
@@ -43,7 +43,7 @@ POS_SIZE = 5    # must be equal to POS_SIZE in config.h
 
 def main():
   parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
-  parser.add_argument('input', help='input file name', type=str, nargs='+')
+  parser.add_argument('input', help='input file name(s)', type=str, nargs='+')
   parser.add_argument('-o', '--out', help='output base name (def. input base name)', default="", type=str)  
   parser.add_argument('-l', '--lcp', help='compute LCP Array',action='store_true')
   parser.add_argument('-d', '--da',  help='compute Document Array',action='store_true')
@@ -65,7 +65,7 @@ def main():
   print("Sending logging messages to file:", logfile_name)
   with open(logfile_name,"w") as logfile:  
 
-    print(">>> Begin test",file=logfile)
+    print(">>> Begin computation",file=logfile)
     show_command_line(logfile)
     logfile.flush()
 
@@ -157,7 +157,11 @@ def check_input(args):
       args.basename = args.out
   if args.lbytes!=1 and args.lbytes!=2 and args.lbytes!=4:
     print("The number of bytes for LCP entry must be 1, 2 or 4")
-    sys.exit(1)  
+    sys.exit(1)
+  if args.delete and not args.sum:
+    print("Option --delete can only be used with --sum")
+    sys.exit(1) 
+  
 
 # phase1:
 # concatenation or computation of bwts 

@@ -8,13 +8,13 @@ There are two different usages depending on whether you already have the
 BWT/LCP of the input files:
 
 If you  already have the BWT/LCPs use option -M (merge only): you must 
-specify the base names on the command line and use the option 
--o to specify an output basename. 
+specify at least two base names on the command line and use the option 
+-o to specify the output basename. 
 For example
-  {exe} -M -o merge  fileA fileB 
+  {exe} -M -o ABmerge  fileA fileB 
 will merge the files fileA.bwt/fileA.2.lcp and fileB.bwt/fileB.2.lcp and
-produce the output files: merge.bwt, merge.2.lcp
-Globbing is accepted: multiple file names can be denoted for example 
+produce the output files: ABmerge.bwt, ABmerge.2.lcp
+Globbing is accepted: multiple input file names can be denoted for example 
 as file?
  
 If you don't have the BWTs then your input must consists of a single file
@@ -24,10 +24,13 @@ with extension
   .txt       (one input document per line)
 and it is not mandatory to specify the output basename. For example:
   {exe} -l  file.fasta 
-this will produce the output files: file.fasta.bwt, files.fasta.2.lcp
+this will produce the output files: file.fasta.bwt, file.fasta.2.lcp
 
 The option --lbytes specifies the number of bytes used for each LCP entry;
-Note this number is always part of the lcp file names.
+(1, 2, or 4). Note from the examples above that this number is always 
+part of the lcp file names: for example if option "--lbytes 4" is used
+then all input and output LCP files must use 4 bytes per entry and have
+the extension ".4.lcp"   
 
 All input and output files are uncompressed!
 
@@ -39,13 +42,12 @@ Command line options:
 gsacak_exe = "tools/gsacak"
 gsacak64_exe = "tools/gsacak-64"
 gap_exe = "gap"
-mergelcp_exe = "tools/mergelcp" 
 shasum_exe = "sha1sum"
 
 
 def main():
   parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
-  parser.add_argument('input', help='input file name', type=str, nargs='+')
+  parser.add_argument('input', help='input file name(s)', type=str, nargs='+')
   parser.add_argument('-o', '--out',  help='output base name (def. input base name)', default="", type=str)  
   parser.add_argument('-d', '--da',   help='compute Document Array',action='store_true')
   parser.add_argument('-M','--merge', help='merge only: inputs are bwt/lcp files',action='store_true')
@@ -98,15 +100,13 @@ def main():
     if args.sum :
       digest = file_digest(args.basename +".bwt",logfile)
       print("BWT {exe}: {digest}".format(exe=shasum_exe, digest=digest))
-      if args.lcp:
-        digest = file_digest("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes),logfile)
-        print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+      digest = file_digest(args.basename+args.lcpext,logfile)
+      print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
     # -------- delete output files if required 
     if (args.sum and args.delete):
       try:
         os.remove(args.basename+".bwt")
-        if args.lcp:
-          os.remove("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes))
+        os.remove(args.basename+args.lcpext)
       except OSError as  e:                 
         # if failed, report it back to the user and stop
         print ("Error: %s - %s." % (e.filename,e.strerror))      
@@ -124,24 +124,50 @@ def file_digest(name,logfile):
       hashsum = "Error!" 
     return hashsum  
 
+# check that all required files for merge mode exist
+# return True if at least one file is missing  
+def files_bwt_lcp_missing(args):
+  missing = False
+  for name in args.input:
+    if not os.path.exists (name+".bwt"):
+      print("  Input file ", name + ".bwt  missing")
+      missing = True
+    if not os.path.exists(name+args.lcpext):
+      print("  Input file ", name +args.lcpext, " missing")
+      missing = True
+  return missing 
+ 
+
 # check correctness of number of input file and define basename for output
 def check_input(args):
-  # ---- if the inputs are bwt there must be at least 2 of them
+  # tests common to the two operation modes   
+  if args.delete and not args.sum:
+    print("Option --delete can only be used with --sum")
+    sys.exit(1) 
+  if args.lbytes!=1 and args.lbytes!=2 and args.lbytes!=4:
+    print("The number of bytes for LCP entry must be 1, 2 or 4")
+    sys.exit(1)  
+  args.lcpext = ".{N}.lcp".format(N=args.lbytes)
+  # ---- if the inputs are bwts/lcps there must be at least 2 of them
   if args.merge:
     if len(args.input)<2:
-      print("You must supply at least 2 input BWT/LCP files!")
+      print("You must supply at least 2 input basenames!")
       sys.exit(1)
     if len(args.out)==0:
       print("Please use option -o to specify an output basename!")
       sys.exit(1)
     args.basename = args.out
-    args.lcpext = ".{N}.lcp".format(N=args.lbytes)
+    # check existence of all input files
+    if files_bwt_lcp_missing(args): 
+      print("The above input are files missing.") 
+      print("Makes sure all the input files exist and have the correct extension")
+      sys.exit(1)  
     # check file sizes
     for name in args.input:
       size = os.path.getsize(name+".bwt")
       sizelcp = os.path.getsize(name+args.lcpext)
       if(size*args.lbytes!=sizelcp):
-        print("BWT/LCP file sizes mismatch for input",name)
+        print("BWT/LCP file sizes mismatch for input:",name)
         sys.exit(1)
   # ---- if the input are concatenate texts there is a single file
   else:
@@ -152,9 +178,7 @@ def check_input(args):
       args.basename = args.input[0]
     else:
       args.basename = args.out
-  if args.lbytes!=1 and args.lbytes!=2 and args.lbytes!=4:
-    print("The number of bytes for LCP entry must be 1, 2 or 4")
-    sys.exit(1)  
+
 
 # phase1:
 # concatenation or computation of bwts 
@@ -197,33 +221,13 @@ def phase1(args,logfile, logfile_name):
 # phase2: 
 # merging of BWTs and computation of LCP and DA arrays
 def phase2(args,logfile, logfile_name):
-  bwt_size=os.path.getsize(args.basename + ".bwt")
-  if(bwt_size > args.mem*1024*1024):
-    # input larger than assigned ram: external algorithm 
-    options = "-A128 -g128 -vaE"
-  elif 3 * bwt_size >  args.mem*1024*1024:
-    # input fits in ram but not too small: semi-external algorithm
-    options = "-A8 -g8 -vaE"
-  else:
-    # input 3 times smaller than assigned ram: internal algorithm 
-    options = "-g256 -vaT"
   exe = os.path.join(args.egap_dir,gap_exe)
-  if(args.lcp): options += "l"  # generate lcp
+  options = "-g256 -varBT"
   if(args.da): options += "d"   # generate da
   if(args.v): options += "v"    # increase verbosity level
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
               byts = args.lbytes, opts=options, ibase=args.basename)
   print("==== gap\n Command:", command)
-  return execute_command(command,logfile,logfile_name)
-
-
-# phase3: 
-# merging of LCP values
-def phase3(args,logfile, logfile_name):
-  exe = os.path.join(args.egap_dir,mergelcp_exe)
-  command = "{exe} -k 256 {ibase} {pos} {lcp}".format(exe=exe, 
-              ibase=args.basename, pos=POS_SIZE,lcp=args.lbytes)
-  print("==== mergeLcp\n Command:", command)
   return execute_command(command,logfile,logfile_name)
   
 

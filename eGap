@@ -146,7 +146,7 @@ def check_input(args):
       print("Please use option -o to specify an output basename!")
       sys.exit(1)
     args.basename = args.out
-  # ---- if the input are concatenate texts there is a single file
+  # ---- if the input are concatenated texts there is a single file
   else:
     if len(args.input)!=1:
       print("You must supply a single file containing the concatenation of the input texts!")

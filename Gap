@@ -108,7 +108,7 @@ def main():
 
     # ---- final report
     elapsed = time.time()-start0
-    outsize = os.path.getsize(args.basename)
+    outsize = os.path.getsize(args.basename+".bwt")
     musecbyte = elapsed*10**6/(outsize)
     print("==== Done")
     print("Total construction time: {0:.4f}   usec/byte: {1:.4f}".format(elapsed,musecbyte))
@@ -180,7 +180,7 @@ def check_input(args):
     # check existence of all input files
     if files_bwt_lcp_missing(args): 
       print("The above input files are missing.") 
-      print("Makes sure all the input files exist and have the correct extension")
+      print("Makes sure all input files exist and have the correct extension")
       sys.exit(1)  
     # check file sizes
     if args.lcp:
@@ -202,7 +202,7 @@ def check_input(args):
 
 
 # phase1:
-# concatenation or computation of bwts 
+# concatenation or computation of bwts/lcps 
 def phase1(args,logfile, logfile_name):
   if len(args.input)>1:  # merge mode
     print("==== creating .size file")    

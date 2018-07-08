@@ -101,7 +101,7 @@ def main():
 
     # ---- final report
     elapsed = time.time()-start0
-    outsize = os.path.getsize(args.basename)
+    outsize = os.path.getsize(args.basename+".bwt")
     musecbyte = elapsed*10**6/(outsize)
     print("==== Done")
     print("Total construction time: {0:.4f}   usec/byte: {1:.4f}".format(elapsed,musecbyte))
@@ -112,12 +112,17 @@ def main():
       if args.lcp:
         digest = file_digest("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes),logfile)
         print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+      if args.da:
+        digest = file_digest(args.basename+".da",logfile)
+        print("DA  {exe}: {digest}".format(exe=shasum_exe, digest=digest))
     # -------- delete output files if required 
     if (args.sum and args.delete):
       try:
         os.remove(args.basename+".bwt")
         if args.lcp:
           os.remove("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes))
+        if args.da:
+          os.remove(args.basename+".da")
       except OSError as  e:                 
         # if failed, report it back to the user and stop
         print ("Error: %s - %s." % (e.filename,e.strerror))      
@@ -155,6 +160,7 @@ def check_input(args):
       args.basename = args.input[0]
     else:
       args.basename = args.out
+  # tests common to the two operation modes   
   if args.lbytes!=1 and args.lbytes!=2 and args.lbytes!=4:
     print("The number of bytes for LCP entry must be 1, 2 or 4")
     sys.exit(1)

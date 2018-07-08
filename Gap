@@ -233,7 +233,8 @@ def phase1(args,logfile, logfile_name):
     # specify output base name  
     if len(args.out)==0:  outopt=""
     else:                 outopt="-o " + args.basename
-    if(args.lcp): options = "-g {lbytes}".format(lbytes = args.lbytes)   # generate lcp    
+    if(args.lcp): options = "-g {lbytes}".format(lbytes = args.lbytes)   # generate lcp 
+    else: options = ""   
     command = "{exe} -b {options} {output} {ifile} 0".format(exe=exe, 
               options=options, output=outopt, ifile=args.input[0])
     # execute choosen algorithm

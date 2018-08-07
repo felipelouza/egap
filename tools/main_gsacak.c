@@ -107,7 +107,7 @@ int main(int argc, char** argv){
   if(outfile==NULL)
     outfile= c_file; 
 
-  if(OutputGapLcp!=1 && OutputGapLcp!=2 && OutputGapLcp!=4) {
+  if(OutputGapLcp!=0 && OutputGapLcp!=1 && OutputGapLcp!=2 && OutputGapLcp!=4) {
     puts("Invalid lcp size!! Must be 1, 2 or 4\n");
     usage(argv[0]);
   }

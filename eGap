@@ -104,7 +104,7 @@ def main():
     outsize = os.path.getsize(args.basename+".bwt")
     musecbyte = elapsed*10**6/(outsize)
     print("==== Done")
-    print("Total construction time: {0:.4f}   usec/byte: {1:.4f}".format(elapsed,musecbyte))
+    print("Total construction time: {0:.4f}   usec/byte: {1:.4f} (outsize: {2})".format(elapsed,musecbyte,outsize))
     # -------- compute hash sums using shasum_exe
     if args.sum :
       digest = file_digest(args.basename +".bwt",logfile)

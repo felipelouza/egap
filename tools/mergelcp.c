@@ -21,6 +21,9 @@
 #define HEAP_SIZE 256 //must be larger than 1
 #endif
 
+#define MB 1048576
+#define KB 1024
+
 /**********************************************************************/
 
 //Open a file and returns a pointer
@@ -128,8 +131,9 @@ int main(int argc, char **argv) {
   char *c_file=NULL;
   int heap_size=HEAP_SIZE;
   int pos_size=4, lcp_size=4;
+  size_t RAM=0;
   
-  while ((c=getopt(argc, argv, "k:vth")) != -1) {
+  while ((c=getopt(argc, argv, "k:vthm:")) != -1) {
     switch (c)
     {
       case 'k':
@@ -140,8 +144,8 @@ int main(int argc, char **argv) {
         time++; break;
       case 'h':
         usage(argv[0]); break;       // show usage and stop
-      //case 'm':
-        //RAM=(size_t)atoi(optarg)*KB; break;
+      case 'm':
+        RAM=(size_t)atoi(optarg)*MB; break;
       case '?':
         exit(EXIT_FAILURE);
     }
@@ -170,6 +174,13 @@ int main(int argc, char **argv) {
     puts("ERROR: k must be larger than 1");
     exit(EXIT_FAILURE);
   }
+
+  if(verbose>0) {
+    puts("Command line:");
+    for(int i=0;i<argc;i++)
+      printf(" %s",argv[i]);
+    puts("");
+  }
   
   //config
   char c_lcp[PATH_MAX], c_size[PATH_MAX];
@@ -184,6 +195,15 @@ int main(int argc, char **argv) {
     printf("sizeof(pos) = %d bytes\n", pos_size);
     printf("sizeof(lcp) = %d bytes\n", lcp_size);
   }
+
+  printf("##\n");
+  if(RAM){
+    if(RAM<pow(2,20)) printf("RAM = %.2lf KB\n", RAM/pow(2,10));
+    else if (RAM>=pow(2,20) && RAM<pow(2,30)) printf("RAM = %.2lf MB\n", RAM/pow(2,20));
+    else printf("RAM = %.2lf GB\n", (double)RAM/pow(2,30));
+    //fprintf(stderr,"RAM = %.2lf GB\n", (double)RAM/pow(2,30));
+  }
+  else printf("RAM = unlimited\n");
 
   // inits 
   time_t t_start=0, t_total=0;
@@ -208,7 +228,7 @@ int main(int argc, char **argv) {
     
     blocks=1; i=0; sum=0;
     level++;
-    h = heap_alloc(heap_size, c_lcp, level, pos_size, lcp_size);
+    h = heap_alloc(heap_size, c_lcp, level, pos_size, lcp_size, RAM);
     
     f_size = fopen(c_size, "rb");//header file
     
@@ -235,7 +255,7 @@ int main(int argc, char **argv) {
       
         //new heap
         heap_free(h, f_lcp, level);
-        h = heap_alloc(heap_size, c_lcp, level, pos_size, lcp_size);
+        h = heap_alloc(heap_size, c_lcp, level, pos_size, lcp_size, RAM);
         
         blocks++;
         i=0;
@@ -298,7 +318,8 @@ int main(int argc, char **argv) {
       printf("%dx%zu\t\n", 1, blocks);
     
     f_size = file_open(c_size_multi, "rb");//header file
-    h = heap_alloc(blocks, c_lcp_multi, level, pos_size, lcp_size);
+
+    h = heap_alloc(blocks, c_lcp_multi, level, pos_size, lcp_size, RAM);
     seek=0;
     
     while(fread(&size, sizeof(size_t), 1, f_size)){

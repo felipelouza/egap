@@ -86,11 +86,14 @@ typedef struct heap {
   int pos_size;
   int lcp_size;
 
+	size_t input_size;
+	size_t output_size;
+
 } heap;
 
 /**********************************************************************/
 
-heap* heap_alloc(int n, char* file_name, int level, int pos_size, int lcp_size);
+heap* heap_alloc(int n, char* file_name, int level, int pos_size, int lcp_size, size_t RAM);
 void heap_free(heap* h, FILE *f_out, int level);
 
 int heap_insert(heap *h, size_t pos);

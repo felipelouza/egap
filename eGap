@@ -219,8 +219,8 @@ def phase2(args,logfile, logfile_name):
 # merging of LCP values
 def phase3(args,logfile, logfile_name):
   exe = os.path.join(args.egap_dir,mergelcp_exe)
-  command = "{exe} -k 256 {ibase} {pos} {lcp} -t".format(exe=exe, 
-              ibase=args.basename, pos=POS_SIZE,lcp=args.lbytes)
+  command = "{exe} -k 256 {ibase} {pos} {lcp} -t -v -m {mem} ".format(exe=exe, 
+              mem=args.mem, ibase=args.basename, pos=POS_SIZE,lcp=args.lbytes)
   print("==== mergeLcp\n Command:", command)
   return execute_command(command,logfile,logfile_name)
   

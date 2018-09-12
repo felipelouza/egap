@@ -10,7 +10,7 @@
   Returns a pointer to the heap on success.  Returns null if no space is left in
   memory and sets errno to ENOMEM.
 ********************************************************************************/
-heap* heap_alloc(int n, char* file_name, int level, int pos_size, int lcp_size) {
+heap* heap_alloc(int heap_size, char* file_name, int level, int pos_size, int lcp_size, size_t RAM) {
    
   heap* h = (heap*) malloc(sizeof(heap));
 
@@ -19,7 +19,7 @@ heap* heap_alloc(int n, char* file_name, int level, int pos_size, int lcp_size) 
     return 0;
   }
   
-  h->heap = (heap_node**) malloc((n+2)*sizeof(heap_node*));
+  h->heap = (heap_node**) malloc((heap_size+2)*sizeof(heap_node*));
   if (!h->heap) {
     free(h);
     errno = ENOMEM;
@@ -27,7 +27,7 @@ heap* heap_alloc(int n, char* file_name, int level, int pos_size, int lcp_size) 
   }
   
   int i;
-  for(i=0; i<n; i++)
+  for(i=0; i<heap_size; i++)
     h->heap[i] = NULL;
    
   h->size = 0;
@@ -38,14 +38,20 @@ heap* heap_alloc(int n, char* file_name, int level, int pos_size, int lcp_size) 
   h->f_in = fopen(h->file_name, "rb"); 
   if (!h->f_in) {perror ("fopen(heap_alloc)");  exit(EXIT_FAILURE);}
 
+//	h->output_size = OUTPUT_SIZE;
+	h->output_size = 0.1*RAM/sizeof(pair);
+
   #if OUTPUT_BUFFER
-    h->out_buffer = (pair*) malloc((OUTPUT_SIZE+1)*sizeof(pair));
+    h->out_buffer = (pair*) malloc((h->output_size+1)*sizeof(pair));
     if(!h->out_buffer) {perror("malloc(heap_alloc)");   exit(EXIT_FAILURE);}
     h->out_idx = 0;
   #endif
 
   h->pos_size = pos_size;
   h->lcp_size = lcp_size;
+
+	h->input_size = 0.85*(RAM/heap_size)/sizeof(pair);
+//	h->input_size = INPUT_SIZE;
 
   return h;
 }
@@ -160,14 +166,14 @@ void  read_buffer(heap *h, heap_node *node){
     fseek(h->f_in, node->seek*(h->pos_size+h->lcp_size), SEEK_SET);
 
     int i;
-    for(i=0; i<INPUT_SIZE; i++){
+    for(i=0; i<h->input_size; i++){
       node->buffer[i]=0;
       int e = fread(&node->buffer[i], h->pos_size+h->lcp_size, 1, h->f_in);
       if(e!=1) {perror(__func__); exit(1);}
       if(node->buffer[i]==MAX_KEY) break; 
     }
 
-    node->seek += INPUT_SIZE;
+    node->seek += h->input_size;
 }
 
 /********************************************************************************
@@ -188,7 +194,7 @@ int heap_insert(heap *h, size_t pos) {
   heap_node *node = h->heap[h->size];
 
   //alloc buffer <pos, lcp>
-  node->buffer = (pair*) malloc(INPUT_SIZE*sizeof(pair));
+  node->buffer = (pair*) malloc(h->input_size*sizeof(pair));
   if (!node->buffer) 
     return errno = ENOMEM;
   node->idx = 0;
@@ -199,7 +205,7 @@ int heap_insert(heap *h, size_t pos) {
 
   #if DEBUG
     int i;
-    for(i=0; i<INPUT_SIZE; i++) 
+    for(i=0; i<h->input_size; i++) 
       printf("<%lu, %lu (%lu)> ", lcp(node->buffer[i]), pos(node->buffer[i]), node->buffer[i]);
     printf("**\n");
   #endif
@@ -221,7 +227,7 @@ pair heap_delete_min(heap *h) {
   pair tmp=0;
   tmp= node->buffer[node->idx];
 
-  if(++node->idx == INPUT_SIZE){ //load from disk
+  if(++node->idx == h->input_size){ //load from disk
     node->idx = 0; 
     read_buffer(h, node);
   }
@@ -240,7 +246,7 @@ void heap_write(heap *h, FILE* f_out, pair value, int level){
   if(level){
     #if OUTPUT_BUFFER
       h->out_buffer[h->out_idx++]= value;
-      if(h->out_idx==OUTPUT_SIZE){
+      if(h->out_idx==h->output_size){
         write_buffer(h, f_out, level);
         //fwrite(h->out_pair_buffer, sizeof(pair), h->out_idx, f_out);  
         //h->out_idx=0;
@@ -257,7 +263,7 @@ void heap_write(heap *h, FILE* f_out, pair value, int level){
     #if OUTPUT_BUFFER   
       //h->out_lcp_buffer[h->out_idx] = value.lcp;
       h->out_buffer[h->out_idx++] = value;
-      if(h->out_idx==OUTPUT_SIZE){
+      if(h->out_idx==h->output_size){
         write_buffer(h, f_out, level);
       }
     #else

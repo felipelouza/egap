@@ -116,6 +116,13 @@ int main(int argc, char** argv){
     usage(argv[0]);
   }
   
+  if(Verbose>0) {
+    puts("Command line:");
+    for(int i=0;i<argc;i++)
+      printf(" %s",argv[i]);
+    puts("");
+  }
+
   // inits 
   time_t t_start=0, t_total=0;
   clock_t c_start=0, c_total=0;

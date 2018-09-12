@@ -107,12 +107,8 @@ int main(int argc, char** argv){
   if(outfile==NULL)
     outfile= c_file; 
 
-  if(OutputGapLcp<0 || OutputGapLcp >= 8) {
-    puts("Invalid lcp size!! Must be between 1 and 7\n");
-    usage(argv[0]);
-  }
-  if(OutputGapLcp > sizeof(int_t)) {
-    puts("Invalid lcp size!! Use gsais-64 to use 8-byte LCPs\n");
+  if(OutputGapLcp!=0 && OutputGapLcp!=1 && OutputGapLcp!=2 && OutputGapLcp!=4) {
+    puts("Invalid lcp size!! Must be 1, 2 or 4\n");
     usage(argv[0]);
   }
   
@@ -136,14 +132,17 @@ int main(int argc, char** argv){
     //fprintf(stderr,"RAM = %.2lf GB\n", (double)RAM/pow(2,30));
   }
   else printf("RAM = unlimited\n");
-  
+
+  // number of arrays used by the algorithm  
   int arrays = 1;
   if(LCP_COMPUTE) arrays++;
- 
-  size_t chunk_size = I_MAX/(sizeof(int_t)*arrays+1.0);
+  
+  // compute chuck size as a function of RAM 
+  size_t chunk_size;
   if(RAM) chunk_size = RAM/(sizeof(int_t)*arrays+1.0);
+  else chunk_size = WORD-1;
   printf("max(chunk) = %lu symbols\n", chunk_size);
-  if(chunk_size>WORD){
+  if(chunk_size>=WORD){
     fprintf(stderr, "ERROR: Requested subcollection larger than %.1lf GB (%.1lf GB)\n", WORD/pow(2,30), (double)chunk_size/pow(2,30));
     if(sizeof(int_t)<8) fprintf(stderr, "Please use %s-64\n", argv[0]);
     exit(EXIT_FAILURE);
@@ -153,7 +152,6 @@ int main(int argc, char** argv){
   FILE* f_in = file_open(c_file, "rb");
   if(!f_in) return 0;
 
-/**/
   //number of chunks
   int_t chunks = 0;
   //K[i] stores the number of strings into chunk C_i

@@ -38,8 +38,8 @@ heap* heap_alloc(int heap_size, char* file_name, int level, int pos_size, int lc
   h->f_in = fopen(h->file_name, "rb"); 
   if (!h->f_in) {perror ("fopen(heap_alloc)");  exit(EXIT_FAILURE);}
 
-//	h->output_size = OUTPUT_SIZE;
-	h->output_size = 0.1*RAM/sizeof(pair);
+//h->output_size = OUTPUT_SIZE;
+  h->output_size = 0.3*RAM/sizeof(pair);
 
   #if OUTPUT_BUFFER
     h->out_buffer = (pair*) malloc((h->output_size+1)*sizeof(pair));
@@ -50,8 +50,8 @@ heap* heap_alloc(int heap_size, char* file_name, int level, int pos_size, int lc
   h->pos_size = pos_size;
   h->lcp_size = lcp_size;
 
-	h->input_size = 0.85*(RAM/heap_size)/sizeof(pair);
-//	h->input_size = INPUT_SIZE;
+  h->input_size = 0.7*(RAM/heap_size)/sizeof(pair);
+//h->input_size = INPUT_SIZE;
 
   return h;
 }

@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+
+import sys, time, argparse, subprocess, os.path, shutil, struct
+
+Description = """Tool to build the BWT and the LCP array using the BCR algorithm"""
+
+bcr_exe = "BCR_BWTCollection"
+shasum_exe = "sha1sum"
+
+
+def main():
+  parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
+  parser.add_argument('input', help='input file name', type=str)
+  parser.add_argument('-o', '--out', help='output base name (def. input base name + .bwt)', default="", type=str)  
+  parser.add_argument('-k',  help='keep temporary files',action='store_true')
+  parser.add_argument('--sum', help='compute output files shasum',action='store_true')
+  parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
+  args = parser.parse_args()
+  # ----- define output file
+  if len(args.out)==0:       # specify basename for input files gap+merge
+    args.out = args.input + ".bwt"
+  # ---- create and open log file
+  logfile_name = args.out + ".extLcp.log"
+  # get main extLcp directory 
+  args.extLcp_dir = os.path.split(sys.argv[0])[0]
+  print("Sending logging messages to file:", logfile_name)
+  with open(logfile_name,"w") as logfile:  
+
+    print(">>> Begin test",file=logfile)
+    show_command_line(logfile)
+    logfile.flush()
+
+    # ---- do the computation 
+    start = time.time()
+    if extLcp(args,logfile,logfile_name)!=True:
+      sys.exit(1)   # fatal error during phase 1 
+    elapsed = time.time()-start
+    outsize = os.path.getsize(args.out)
+    musecbyte = elapsed*10**6/(outsize)
+    print("==== Done")
+    print("Total construction time: {0:.4f}   usec/byte: {1:.4f}".format(elapsed,musecbyte))
+    # -------- compute hash sums using shasum_exe
+    if args.sum :
+      digest = file_digest(args.out,logfile)
+      print("BWT {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+      digest = file_digest(args.out+".lcp",logfile)
+      print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+    # -------- delete temporary files if required 
+    deleteTmpFiles(args)
+    # -------- delete output files if required 
+    if (args.sum and args.delete):
+      try:
+        os.remove(args.out)
+        os.remove(args.out + ".lcp")
+      except OSError as  e:                 
+        # if failed, report it back to the user and stop
+        print ("Error: %s - %s." % (e.filename,e.strerror))
+    print(">>> End test", file=logfile);    
+  return
+
+
+# compute hash digest for a file 
+def file_digest(name,logfile):
+    try:
+      hash_command = "{exe} {infile}".format(exe=shasum_exe, infile=name)
+      hashsum = subprocess.check_output(hash_command.split(),stderr=logfile)
+      hashsum = hashsum.decode("utf-8").split()[0]
+    except:
+      hashsum = "Error!" 
+    return hashsum  
+
+
+# execute bcr
+def extLcp(args,logfile, logfile_name):
+  exe = os.path.join(args.extLcp_dir,bcr_exe)
+  command = "{exe} {infile} {outfile} 0".format(exe=exe, 
+              infile=args.input, outfile=args.out)
+  print("==== BCR\n Command:", command)
+  return execute_command(command,logfile,logfile_name)
+
+
+# delete temporary files produced by BCR
+def deleteTmpFiles(args):
+  if not args.k:
+    try:  
+      os.remove(args.out +".lenBWT_Nseq_SizaAlpha.aux") 
+      os.remove(args.out +".lenSeqs.aux")
+      # delete cyc*txt bwt*aux lcp*aux
+      for f in os.listdir(args.extLcp_dir):  # delete cyc
+        if f.startswith("cyc") and f.endswith("txt"):
+          os.remove(os.path.join(args.extLcp_dir,f))
+        elif (f.startswith("bwt")or f.startswith("lcp"))and f.endswith("aux"):
+          os.remove(os.path.join(args.extLcp_dir,f))
+    except OSError as  e:                 
+      # if failed, report it back to the user and stop
+      print ("Error: %s - %s." % (e.filename,e.strerror))
+      sys.exit(1)
+
+
+# execute command: return True is everything OK, False otherwise
+def execute_command(command,logfile,logfile_name):
+  try:
+    subprocess.check_call(command.split(),stdout=logfile,stderr=logfile)
+  except subprocess.CalledProcessError:
+    print("Error executing command line:")
+    print("\t"+ command)
+    print("Check log file: " + logfile_name)
+    return False
+  return True
+
+def show_command_line(f):
+  f.write("Python command line: ") 
+  for x in sys.argv:
+     f.write(x+" ")
+  f.write("\n")   
+
+if __name__ == '__main__':
+    main()

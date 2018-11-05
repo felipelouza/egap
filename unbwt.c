@@ -1,8 +1,9 @@
 /* *********************************************************************
-   In memory inversion of a bwt for a collection of sequences
-   Giovanni Manzini  (giovanni.manzini@uniupo.it)
-
-    Copyright (C) 2018  Giovanni Manzini
+   Inversion in RAM of a bwt for a collection of sequences
+   It is assumed that the multibwt uses 0 as the EOS symbol
+   RAM usage: 4n bytes if n<2**32, 5n bytes for 2**32 <= n < 2**40.  
+   
+   Copyright (C) 2018  Giovanni Manzini  (giovanni.manzini@uniupo.it)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -55,7 +56,7 @@ void perror_die(const char *s) {
 void invert_bwt(char *bnam, char *tnam)
 {
   FILE *b, *t;
-  uint64_t occ[_BW_ALPHA_SIZE];      // emulation of first column bwt matrix 
+  uint64_t occ[_BW_ALPHA_SIZE];      // emulation of first column of bwt matrix 
   uint64_t start_sa_range[_BW_ALPHA_SIZE+1];
   uint64_t i,tot;
   uint32_t *rankprev, *bwt;
@@ -167,7 +168,7 @@ void invert_bwt(char *bnam, char *tnam)
 
 
 // given an index returns the corresponding char in the bwt matrix
-// to be improved using binary search
+// doing a binary search in the first column representation
 static int32_t get_char_from_first_column64(uint64_t index, uint64_t *first_col)
 {
   // binary search
@@ -207,8 +208,8 @@ int main(int argc, char *argv[])
   }
   else {
     fprintf(stderr,"Usage:  %s infile outfile\n\n", argv[0]);
-    fprintf(stderr,"Takes as input multi-bwt and recovers the original sequences\n");
-    fprintf(stderr,"writing them to the output file separated by a newline\n\n");
+    fprintf(stderr,"Takes as input a multi-bwt that uses 0x0 as the EOS symbol and recovers\n");
+    fprintf(stderr,"the original sequences writing them to <outfile> separated by a newline\n\n");
     exit(1);
   }
   

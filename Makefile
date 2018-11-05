@@ -11,14 +11,14 @@ CFILES = gap.c util.c io.c mergegap.c mergehm.c alphabet.c malloc_count/malloc_c
 CFILES0 = gap.c util.c io.c mergegap.c mergehm.c alphabet.c malloc_count/malloc_count0.c threads.c multiround.c
 
 
-EXECS = gap gap1 gap2 gap4 unbwt
+EXECS = gap1 gap2 gap4 unbwt
 
 # targets not producing a file declared phony
 .PHONY: all tools clean tarfile
 
 all: $(EXECS) tools
 
-# BWTs/LCPs merging (no malloc_count: had some conflicts with -O)
+# BWTs/LCPs merging (assertions enabled and no malloc_count: had some conflicts with -O)
 gap:  $(CFILES0) $(HEADERS)
 	$(CC) $(CFLAGS) $(CFILES0) -lm -DBSIZE=2 -ogap
 
@@ -43,17 +43,4 @@ tarfile:
 clean:
 	\rm -f $(EXECS)
 	make clean -C tools
-
-####
-
-INPUT=dataset/pacbio.fasta	#input data
-RAM=10		#memory in MB 
-K=0 			#number of strings
-
-run:
-	./tools/gsacak-64 $(INPUT) $(K) -bm $(RAM)
-	./gap4 -vEla -A128 -g128 $(INPUT) 
-	./tools/mergelcp $(INPUT) 5 4
-
-####
 

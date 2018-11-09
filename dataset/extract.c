@@ -1,5 +1,5 @@
 // vim: noai:ts=2:sw=2
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,31 +38,31 @@ const char *get_filename_without_ext(const char *filename) {
 // read line by line
 int load_multiple_txt(FILE* f_in, FILE* f_out, size_t size, size_t len) {
 
-	size_t l=0, n=0, sum=0, k=0, max=0;
-	char *buf=NULL;
+  size_t l=0, n=0, sum=0, k=0, max=0;
+  char *buf=NULL;
   while((n = getline(&buf, &l, f_in))!=-1){
 
-		if(len){
-			if(n<len){//discard
-				free(buf);
-				l= 0; buf = NULL;
-				continue;
-			}
-			else{ //cut
-				buf[len] = '\n';
-				buf[len-1] = '\0';
-				n=len;
-			}
+    if(len){
+      if(n<len){//discard
+        free(buf);
+        l= 0; buf = NULL;
+        continue;
+      }
+      else{ //cut
+        buf[len] = '\n';
+        buf[len-1] = '\0';
+        n=len;
+      }
     }
 
     k++;
     if(n>max) max=n;
     sum += n;
     if(sum > size){
-			k--;
-    	printf("%lu\t%.2lf\t%lu\n", k, (double)((sum-n)/k), max);
-    	free(buf);
-    	return 0;
+      k--;
+      printf("%lu\t%.2lf\t%lu\n", k, (double)((sum-n)/k), max);
+      free(buf);
+      return 0;
     }
     fprintf(f_out, "%s", buf);
     free(buf);
@@ -264,14 +264,14 @@ int load_multiple_fasta(FILE* f_in, FILE* f_out, size_t size, size_t len){
       if(curr>max) max=curr;
     }
     sum1=sum2;
-	}
-	
-	free(c_buffer);
-	free(buf1);
-	free(buf2);
-	
-	printf("%lu bytes\n", sum1);
-	if(k) printf("%lu\t%.2lf\t%lu\n", k, (double)((sum1)/k), max);
+  }
+  
+  free(c_buffer);
+  free(buf1);
+  free(buf2);
+  
+  printf("%lu bytes\n", sum1);
+  if(k) printf("%lu\t%.2lf\t%lu\n", k, (double)((sum1)/k), max);
 
 return 1;
 }
@@ -296,25 +296,25 @@ int file_load_multiple(char* c_in, size_t size, size_t len) {
   const char *name = get_filename_without_ext(c_in);
   //sprintf(c_out, "%s.%zu.%s", name, size, type);
   if(len)
-		sprintf(c_out, "%s.%lu.%s", name, len, type);
+    sprintf(c_out, "%s.%lu.%s", name, len, type);
   else
-		sprintf(c_out, "%s.X.%s", name, type);
+    sprintf(c_out, "%s.X.%s", name, type);
 
   FILE* f_out = fopen(c_out, "wb");
   if(!f_out) return 0;
 
   printf("OUTPUT:\t%s\n", c_out);
 
-	if(strcmp(type,"txt") == 0)
-		load_multiple_txt(f_in, f_out, size, len);
-	else if(strcmp(type,"fasta") == 0)
-		load_multiple_fasta(f_in, f_out, size, len);
+  if(strcmp(type,"txt") == 0)
+    load_multiple_txt(f_in, f_out, size, len);
+  else if(strcmp(type,"fasta") == 0)
+    load_multiple_fasta(f_in, f_out, size, len);
   else if(strcmp(type,"fastq") == 0)
-		load_multiple_fastq(f_in, f_out, size, len);
+    load_multiple_fastq(f_in, f_out, size, len);
   else{
-		printf("Error: file not recognized (.txt, .fasta, .fastq)\n");
+    printf("Error: file not recognized (.txt, .fasta, .fastq)\n");
     return 0;
-	}
+  }
 
 //printf("k\tavg(len)\tmax(len)\n");
 
@@ -370,11 +370,11 @@ int main(int argc, char **argv) {
     sscanf(argv[optind++], "%zu", &len);
   }
   else{
-		usage(argv[0]);
-	}
+    usage(argv[0]);
+  }
 
-	if(size==0) size = SSIZE_MAX;
-	file_load_multiple(c_file, size, len);
+  if(size==0) size = SSIZE_MAX;
+  file_load_multiple(c_file, size, len);
 
 }
 

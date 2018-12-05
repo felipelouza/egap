@@ -10,6 +10,10 @@
 #include "utils.h"
 
 
+typedef struct _file_pair{
+	int_t		docs;
+	ssize_t pos;
+} file_pair;
 
 /*******************************************************************/
 int file_chdir(char* dir);
@@ -26,7 +30,7 @@ char* file_load(FILE* f_in) ;
 char** file_load_multiple(char* c_file, int k, size_t* n) ;
 
 char** file_load_multiple_chunks(char* c_file, int_t k, size_t* n, FILE *f_in);
-int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t* chunks, size_t* n, FILE *f_in);
+int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t* chunks, size_t* n, FILE *f_in, ssize_t **pos);
 
 unsigned char** file_load_concat(char* c_file, char *len_file, int k, int_t *n);
 /*******************************************************************/

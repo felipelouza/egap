@@ -73,6 +73,9 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 *--lbytes*      
   number of bytes for each LCP entry (def. 2)
 
+*--rev*      
+  compute data structures for the reversed string  
+
 *-v*       
   verbose output in the log file
 

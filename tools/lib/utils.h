@@ -70,6 +70,7 @@ int bwt(int_t sa, unsigned char* str);
 
 int_t* cat_int(unsigned char** R, int k, int_t *n);
 unsigned char* cat_char(unsigned char** R, int k, size_t *n);
+unsigned char* cat_char_rev(unsigned char** R, int k, size_t *n);
 
 double log2(double i);
 void qsort2(void *array, size_t nitems, size_t size, int (*cmp)(void*,void*));

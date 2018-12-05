@@ -109,6 +109,41 @@ int_t* cat_int(unsigned char** R, int k, int_t *n){
 return str_int;
 }
 /*******************************************************************/
+unsigned char* cat_char_rev(unsigned char** R, int k, size_t *n){
+
+	(*n)++; //add 0 at the end
+
+	int_t i, j;
+	int_t l=0;
+	unsigned char *str = (unsigned char*) malloc((*n)*sizeof(unsigned char));
+
+	for(i=k-1; i>=0; i--){
+
+		int_t m = strlen((char*)R[i]);
+		//removes empty strings
+		if(m==0){
+			(*n)--;
+			continue;
+		}
+		for(j=m-1; j>=0; j--){
+			//removes symbols > 255
+			if(R[i][j]+1<256) str[l++] = R[i][j]+1;
+			else (*n)--;
+		}
+		str[l++] = 1; //add 1 as separator
+	}
+
+	str[l++]=0;
+  if(*n>l){
+		str = (unsigned char*) realloc(str, (l)*sizeof(unsigned char));
+		printf("N = %" PRIdN "\n", l);
+	}
+	*n = l;
+
+return str;
+}
+
+/*******************************************************************/
 unsigned char* cat_char(unsigned char** R, int k, size_t *n){
 
 	(*n)++; //add 0 at the end
@@ -133,7 +168,7 @@ unsigned char* cat_char(unsigned char** R, int k, size_t *n){
 	}
 
 	str[l++]=0;
-        if(*n>l){
+  if(*n>l){
 		str = (unsigned char*) realloc(str, (l)*sizeof(unsigned char));
 		printf("N = %" PRIdN "\n", l);
 	}

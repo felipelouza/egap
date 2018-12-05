@@ -215,9 +215,9 @@ int main(int argc, char** argv){
 
     // disk access
     //if(len_file==0)
-		int_t bl = b;
-		if(Reversed) bl = chunks-(b+1);
-		fseek(f_in, pos[bl], SEEK_SET);
+    int_t bl = b;
+    if(Reversed) bl = chunks-(b+1);
+    fseek(f_in, pos[bl], SEEK_SET);
 
     R = (unsigned char**) file_load_multiple_chunks(c_file, K[bl], &len, f_in);
    
@@ -267,18 +267,18 @@ int main(int argc, char** argv){
     #if DEBUG
       printf("R:\n");
       for(i=0; i<min(5,K[bl]); i++){
-				printf("%" PRIdN ") %s (%zu)\n", i, R[i], strlen((char*)R[i]));
-			}
-			if(Reversed){
-				int count=0;
-				printf("T^rev = ");
-				for(i=0;i<len; i++){
-					if(str[i]>1) printf("%c", str[i]-1);
-					else{ count++; printf("%d", str[i]);}
-					if(count==5) break;
-				}
-				printf("\n");
-			}
+        printf("%" PRIdN ") %s (%zu)\n", i, R[i], strlen((char*)R[i]));
+      }
+      if(Reversed){
+       int count=0;
+        printf("T^rev = ");
+        for(i=0;i<len; i++){
+          if(str[i]>1) printf("%c", str[i]-1);
+          else{ count++; printf("%d", str[i]);}
+          if(count==5) break;
+        }
+        printf("\n");
+      }
     #endif
   
     //free memory
@@ -319,26 +319,26 @@ int main(int argc, char** argv){
           assert(SA[i]==len-1);
         else {
           c = bwt(SA[i],str);
-					if(OutputBwt>1){ //RLE for DNA sequences        
-						unsigned char run=1;          
-						while(i+1<len && bwt(SA[i+1],str)==c && run<32){
-							run++;i++;
-						}        
-						#if DEBUG
-							printf("<%c, %d> = ", c, run);
-	          #endif
-		        c = rle(c, run);
-			      #if DEBUG
-				      printf("%d\n", c);
-					  #endif
-					}
-          int err = fputc(c,f_bwt);
-          if(err==EOF) die(__func__);
+          if(OutputBwt>1){ //RLE for DNA sequences        
+          unsigned char run=1;
+          while(i+1<len && bwt(SA[i+1],str)==c && run<32){
+            run++;i++;
+          }        
+          #if DEBUG
+            printf("<%c, %d> = ", c, run);
+          #endif
+          c = rle(c, run);
+          #if DEBUG
+            printf("%d\n", c);
+          #endif
         }
+        int err = fputc(c,f_bwt);
+        if(err==EOF) die(__func__);
       }
-      // write BWT size to file 
-      size_t len1 = len-1;
-      fwrite(&len1,sizeof(size_t), 1, f_size);
+    }
+    // write BWT size to file 
+    size_t len1 = len-1;
+    fwrite(&len1,sizeof(size_t), 1, f_size);
     }
   
     if(Verbose>2) {

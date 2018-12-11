@@ -50,7 +50,7 @@ void usage(char *name){
   puts("\t-x      extract individual input files and stop");
   puts("\t-X      convert input to raw+len format (ext: .cat .len) and stop");
   // puts("\t-L    lengths of the input sequences in FILE.len (no separator)");
-  puts("\t-u      compute data structures for the reversed string\n");
+  puts("\t-R      compute data structures for the reversed string\n");
   puts("\t-v      verbose output (more v's for more verbose)\n");
   printf("sizeof(int): %zu bytes\n", sizeof(int_t));
   printf("Max text size: %zu\n", WORD);
@@ -70,7 +70,7 @@ int main(int argc, char** argv){
   char *c_file=NULL, *outfile=NULL;
   size_t RAM=0;
 
-  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:u")) != -1) {
+  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:R")) != -1) {
     switch (c) 
       {
       case 'c':
@@ -95,7 +95,7 @@ int main(int argc, char** argv){
         RAM=(size_t)atoi(optarg)*MB; break;
       case 'o':
         outfile = optarg; break;     // output file base name  
-      case 'u':
+      case 'R':
         Reversed++; break;
       case '?':
         exit(EXIT_FAILURE);
@@ -216,7 +216,9 @@ int main(int argc, char** argv){
     // disk access
     //if(len_file==0)
     int_t bl = b;
-    if(Reversed) bl = chunks-(b+1);
+		#if	REVERSE_SCHEME==2
+	    if(Reversed) bl = chunks-(b+1);
+		#endif
     fseek(f_in, pos[bl], SEEK_SET);
 
     R = (unsigned char**) file_load_multiple_chunks(c_file, K[bl], &len, f_in);
@@ -262,14 +264,13 @@ int main(int argc, char** argv){
       for(i=0;i<min(10,len); i++)
          printf("%" PRIdN ") %d\n", i, str[i]);
       printf("\n");
-    #endif
 
-    #if DEBUG
       printf("R:\n");
       for(i=0; i<min(5,K[bl]); i++){
         printf("%" PRIdN ") %s (%zu)\n", i, R[i], strlen((char*)R[i]));
       }
       if(Reversed){
+			 printf("Reverse scheme: %d\n", REVERSE_SCHEME);
        int count=0;
         printf("T^rev = ");
         for(i=0;i<len; i++){

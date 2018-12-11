@@ -41,6 +41,10 @@
 
 typedef uint32_t int_text;
 
+//Schemes for reversed string:
+//1. T^r = a^r b^r c^r; 
+//2. T^r = c^r b^r a^r
+#define REVERSE_SCHEME 1 
 
 /**********************************************************************/
 
@@ -72,7 +76,6 @@ int_t* cat_int(unsigned char** R, int k, int_t *n);
 unsigned char* cat_char(unsigned char** R, int k, size_t *n);
 unsigned char* cat_char_rev(unsigned char** R, int k, size_t *n);
 
-double log2(double i);
 void qsort2(void *array, size_t nitems, size_t size, int (*cmp)(void*,void*));
 
 #endif

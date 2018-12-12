@@ -44,7 +44,7 @@ typedef uint32_t int_text;
 //Schemes for reversed string:
 //1. T^r = a^r b^r c^r; 
 //2. T^r = c^r b^r a^r
-#define REVERSE_SCHEME 1 
+#define REVERSE_SCHEME 2 
 
 /**********************************************************************/
 

@@ -99,5 +99,3 @@ We have also used versions of the above collections shortened to 1GB. The shorte
 
 The results of our experiments are reported on the above WABI paper and on an extended journal version (in preparation).
 
-
-

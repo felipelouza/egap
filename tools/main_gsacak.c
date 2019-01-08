@@ -66,11 +66,11 @@ int main(int argc, char** argv){
   // parse command line
   int VALIDATE=0, OutputSA=0, LCP_COMPUTE=0;
   int_t k=0;
-  int Verbose=0, OutputGapLcp=0, OutputBwt=0, Extract=0, Reversed=0, c; // len_file=0;
+  int Verbose=0, OutputGapLcp=0, OutputBwt=0, OutputDA=0, Extract=0, Reversed=0, c; // len_file=0;
   char *c_file=NULL, *outfile=NULL;
   size_t RAM=0;
 
-  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:R")) != -1) {
+  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:Rd")) != -1) {
     switch (c) 
       {
       case 'c':
@@ -97,6 +97,8 @@ int main(int argc, char** argv){
         outfile = optarg; break;     // output file base name  
       case 'R':
         Reversed++; break;
+			case 'd':
+				OutputDA++; break;
       case '?':
         exit(EXIT_FAILURE);
       }
@@ -181,7 +183,7 @@ int main(int argc, char** argv){
   }
 
   // files used for multi BWT, LCP and their lengths 
-  FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL;
+  FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL, *f_da = NULL;
   FILE *f_size = NULL; //size of each chunk
 
   if(Extract>1){
@@ -207,6 +209,14 @@ int main(int argc, char** argv){
     f_lcp = file_open(s, "wb");
   }
 
+  if(OutputDA) {
+    char s[500]; 
+    snprintf(s,500,"%s.da_block",outfile); 
+    f_da = file_open(s, "wb");
+  }
+
+	size_t curr=0;
+	size_t sum=0;
   // processing of individual chunks 
   for(b=0; b<chunks; b++){
 
@@ -296,17 +306,18 @@ int main(int argc, char** argv){
       LCP = (int_t*) malloc(len*sizeof(int_t));
       for(i=0; i<len; i++) LCP[i]=0;
     }
+		int_t *DA = NULL;
+		if(OutputDA){
+      DA = (int_t*) malloc(len*sizeof(int_t));
+      for(i=0; i<len; i++) DA[i]=0;
+		}
     
     if(Verbose)
       time_start(&t_start, &c_start);
   
-    // computation of SA and possibly LCP
-    if(LCP_COMPUTE){
-      depth = gsacak((unsigned char*)str, (uint_t*)SA, LCP, NULL, len);
-    }
-    else{
-      depth = gsacak((unsigned char*)str, (uint_t*)SA, NULL, NULL, len);
-    }
+    // computation of SA, DA and possibly LCP
+    depth = gsacak((unsigned char*)str, (uint_t*)SA, LCP, DA, len);
+
     if(Verbose)
       fprintf(stderr,"gsacak returned depth: %"PRIdN"\n", depth);
     if(Verbose)
@@ -332,16 +343,23 @@ int main(int argc, char** argv){
           #if DEBUG
             printf("%d\n", c);
           #endif
+          }
+          int err = fputc(c,f_bwt);
+          if(err==EOF) die(__func__);
         }
-        int err = fputc(c,f_bwt);
-        if(err==EOF) die(__func__);
       }
+      // write BWT size to file 
+      size_t len1 = len-1;
+      fwrite(&len1,sizeof(size_t), 1, f_size);
     }
-    // write BWT size to file 
-    size_t len1 = len-1;
-    fwrite(&len1,sizeof(size_t), 1, f_size);
+
+    // output DA alone
+    if(OutputDA){
+			//printf("%d\t%zu\t%d\t k = %d\n", len, sum*sizeof(int), curr, K[bl]);
+      for(i=0; i<len; i++) DA[i]+=curr;
+      file_write_array(f_da, DA+1, len-1);//ignore the first DA-value
     }
-  
+
     if(Verbose>2) {
       if(LCP_COMPUTE) lcp_array_print((unsigned char*)str, SA, LCP, min(20,len), sizeof(char)); 
       else suffix_array_print((unsigned char*)str, SA, min(10,len), sizeof(char));
@@ -380,11 +398,16 @@ int main(int argc, char** argv){
         fwrite(&c,OutputGapLcp, 1, f_lcp);
       }
     }
+
     // free SA (LCP) and concatenated input collection  
     free(SA);
     if(LCP_COMPUTE) free(LCP);
+		if(OutputDA) free(DA);
     free(str);
     
+		curr+=K[bl];
+		sum+=len-1;
+
   } // end chunks loop 
 
   fclose(f_in);
@@ -406,6 +429,10 @@ int main(int argc, char** argv){
 
   if(OutputGapLcp){
     fclose(f_lcp);
+  }
+
+  if(OutputDA){
+    fclose(f_da);
   }
 
   return 0;

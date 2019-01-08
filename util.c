@@ -235,12 +235,13 @@ void mergeBWTandLCP(g_data *g, bool lastRound)
 {
   if(sizeof(symbol)>sizeof(palette)) die("Sorry, alphabet is too large (mergeBWTandLCP");
   assert(!g->lcpMerge || g->blockBeginsAt!=NULL); // if lcpMerge we need g->blockBeginsAt
-  FILE *daFile=NULL;
+  FILE *daOutFile=NULL;
 
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
-  if(g->outputDA && lastRound)
-    daFile = openDAFile(g);
+  if(g->outputDA && lastRound){
+    daOutFile = openDAFile(g);
+	}
   if(g->extMem) {
     open_bw_files(g);// open files in read mode
     rewind_bw_files(g);   // set file pointers at the beginning of each BWT
@@ -263,7 +264,7 @@ void mergeBWTandLCP(g_data *g, bool lastRound)
       assert( tba_get(g->bitB,i)==3 ); 
     // if requested output merge array
     if(g->outputDA && lastRound) 
-      if(fputc(currentColor, daFile)==EOF)
+      if(fputc(currentColor, daOutFile)==EOF)
         die("mergeBWTandLCP: Error writing to Document Array file");   
     // save new BWT char overwriting mergeColor[i]
     if(g->extMem) {
@@ -302,7 +303,7 @@ void mergeBWTandLCP(g_data *g, bool lastRound)
     memcpy(g->bws[0],bwtout,g->mergeLen*sizeof(symbol));
   // close document array file 
   if(g->outputDA && lastRound)
-      if(fclose(daFile)!=0) die("mergeBWTandLCP: Error closing Document Array file");   
+      if(fclose(daOutFile)!=0) die("mergeBWTandLCP: Error closing Document Array file");   
   //copy merged values back to g->lcps[0]
   if(g->lcpMerge)
       memcpy(g->lcps[0],g->blockBeginsAt,g->mergeLen*sizeof(lcpInt)); // copy lcp values back to g->lcps[0]
@@ -316,15 +317,22 @@ void mergeBWT128ext(g_data *g, bool lastRound)
 {
   if(sizeof(symbol)>sizeof(palette)) die("Sorry, alphabet is too large (mergeBWT128ext");
   assert(!g->lcpMerge && g->extMem && g->numBwt<=128);
-  FILE *daFile=NULL;
+  FILE *daOutFile=NULL;
 
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
   if(g->outputDA && lastRound)
-    daFile = openDAFile(g);  
+    daOutFile = openDAFile(g);  
 
   open_bw_files(g);     // open files in read mode
   rewind_bw_files(g);   // set file pointers at the beginning of each BWT
+
+	if(g->outputDA && lastRound){
+    snprintf(g->dafname,Filename_size,"%s.%s",g->outPath,DA_BL_EXT);
+    open_da_files(g);
+		rewind_da_files(g);   // set file pointers at the beginning of each DA
+	}
+
   // mmap merge values so we can read/write simultaneously 
   int fd = open(g->merge_fname,O_RDWR);
   if(fd == -1) die(__func__);
@@ -340,9 +348,15 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     int currentColor = g->mergeColor[i] & 0x7F; // delete additional bit
     assert(currentColor < g->numBwt);
     // if requested output merge array
-    if(g->outputDA && lastRound) 
-      if(fputc(currentColor, daFile)==EOF)
+    if(g->outputDA && lastRound){ 
+			int da_value=0;
+			int e = fread(&da_value, sizeof(int), 1, g->daf[currentColor]);
+      if(e!=1) die(__func__);
+      //if(fputc(currentColor, daOutFile)==EOF)
+      if(fwrite(&da_value, sizeof(int), 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   
+			//printf("%d ==> %d\n", currentColor, da_value);
+		}	
     // save new BWT char overwriting mergeColor[i]
     int e = fread(bwtout+i,sizeof(symbol),1,g->bwf[currentColor]);
     if(e!=1) die(__func__);
@@ -350,6 +364,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     g->inCnt[currentColor]++; // one more char read from currentColor BWT
   }  
   close_bw_files(g);
+  close_da_files(g);
   // final check on the merging 
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
 
@@ -363,8 +378,10 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   if(fd == -1) die(__func__);
   g->mergeColor=NULL;  
   // close document array file 
-  if(g->outputDA && lastRound)
-      if(fclose(daFile)!=0) die("mergeBWT128ext: Error closing Document Array file");   
+  if(g->outputDA && lastRound){
+    if(fclose(daOutFile)!=0) die("mergeBWT128ext: Error closing Document Array file");   
+	  remove(g->dafname);
+	}
 }
 
 
@@ -376,12 +393,12 @@ void mergeBWT128(g_data *g, bool lastRound)
   if(sizeof(symbol)>2) die("Sorry, alphabet is too large (mergeBWT16)");
   symbol *bwtout = (symbol *) g->mergeColor16;   // merged BWT stored in mergeColor16
   assert(!g->lcpMerge);
-  FILE *daFile=NULL;
+  FILE *daOutFile=NULL;
 
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
   if(g->outputDA && lastRound)
-    daFile = openDAFile(g);  
+    daOutFile = openDAFile(g);  
 
   int shift = 7; (void) shift;  // shift is not used outside assertions 
   for (customInt i = 0; i < g->mergeLen; ++i) {
@@ -393,7 +410,7 @@ void mergeBWT128(g_data *g, bool lastRound)
       assert( ((g->mergeColor16[i]>>2*shift) & 3)==3);
     // if requested output merge array
     if(g->outputDA && lastRound) 
-      if(fputc(currentColor, daFile)==EOF)
+      if(fputc(currentColor, daOutFile)==EOF)
         die("mergeBWT128: Error writing to Document Array file");   
     // save new BWT char overwriting mergeColor16[i]
     bwtout[i] = g->bws[currentColor][g->inCnt[currentColor]];
@@ -409,7 +426,7 @@ void mergeBWT128(g_data *g, bool lastRound)
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
   // close document array file 
   if(g->outputDA && lastRound)
-      if(fclose(daFile)!=0) die("mergeBWT128: Error closing Document Array file");   
+      if(fclose(daOutFile)!=0) die("mergeBWT128: Error closing Document Array file");   
 }
 
 
@@ -421,12 +438,12 @@ void mergeBWT8(g_data *g, bool lastRound)
   if(sizeof(symbol)>sizeof(palette)) die("Sorry, alphabet is too large (mergeBWT8)");
   symbol *bwtout = (symbol *) g->mergeColor;   // merged BWT stored in mergeColor
   assert(!g->lcpMerge);
-  FILE *daFile=NULL;
+  FILE *daOutFile=NULL;
 
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0); // clear counter inside each bwt
   if(g->outputDA && lastRound)
-    daFile = openDAFile(g);    
+    daOutFile = openDAFile(g);    
   if(g->extMem) {
     open_bw_files(g);     // open files in read/write mode
     rewind_bw_files(g);   // set file pointers at the beginning of each BWT 
@@ -441,7 +458,7 @@ void mergeBWT8(g_data *g, bool lastRound)
       assert( ((g->mergeColor[i]>>2*shift) & 3)==3);    
     // if requested output merge array
     if(g->outputDA && lastRound) 
-      if(fputc(currentColor, daFile)==EOF)
+      if(fputc(currentColor, daOutFile)==EOF)
         die("mergeBWT8: Error writing to Document Array file");   
     // save new BWT char overwriting mergeColor[i]
     if(g->extMem) {
@@ -457,7 +474,7 @@ void mergeBWT8(g_data *g, bool lastRound)
   if(g->extMem) close_bw_files(g);
   // close document array file 
   if(g->outputDA && lastRound)
-      if(fclose(daFile)!=0) die("mergeBWT8: Error closing Document Array file");       
+      if(fclose(daOutFile)!=0) die("mergeBWT8: Error closing Document Array file");       
   
   // merging done: copy back to g->bws[0] or to file
   if(g->extMem) {
@@ -483,7 +500,7 @@ void mergeBWTandLCP256(g_data *g, bool lastRound)
   if(sizeof(symbol)>sizeof(g->array32[0])) die("Sorry, alphabet is too large (mergeBWTandLCP256)");
   symbol *bwtout = (symbol *) g->array32;   // merged BWT stored in g->array32
   assert(!g->lcpMerge);
-  FILE *daFile=NULL;
+  FILE *daOutFile=NULL;
   FILE *lcpfile = NULL;
   int shift = 8;
 
@@ -498,14 +515,14 @@ void mergeBWTandLCP256(g_data *g, bool lastRound)
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
   if(g->outputDA && lastRound)
-    daFile = openDAFile(g);  
+    daOutFile = openDAFile(g);  
   for (customInt i = 0; i < g->mergeLen; ++i) {
     int currentColor = (g->array32[i]) & 0xFF;
     assert(currentColor == ((g->array32[i]>>shift) & 0xFF));// merge and newMerge should be identical 
     assert(currentColor < g->numBwt);
     // if requested output merge array
     if(g->outputDA && lastRound) 
-      if(fputc(currentColor, daFile)==EOF)
+      if(fputc(currentColor, daOutFile)==EOF)
         die("mergeBWTandLCP256: Error writing to Document Array file");       
     // get next BWT char
     symbol c = g->bws[currentColor][g->inCnt[currentColor]];
@@ -535,7 +552,7 @@ void mergeBWTandLCP256(g_data *g, bool lastRound)
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
   // close document array file 
   if(g->outputDA && lastRound)
-      if(fclose(daFile)!=0) die("mergeBWTandLCP256: Error closing Document Array file");   
+      if(fclose(daOutFile)!=0) die("mergeBWTandLCP256: Error closing Document Array file");   
 
 }
 

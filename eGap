@@ -202,6 +202,7 @@ def phase1(args,logfile, logfile_name):
     options = "-b"
     if(args.rev): options += "R"    # reverse string as input 
     if(args.sa):  options += "s"    # output SA (ext: .sa)
+    if(args.da):  options += "d"    # output DA (ext: .da)
     if(args.v):   options += "v"    # increase verbosity level
     command = "{exe} {opts} -m {mem} {output} {ifile} 0".format(exe=exe, 
               mem=args.mem, output=outopt, ifile=args.input[0], opts=options)

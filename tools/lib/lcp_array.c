@@ -198,20 +198,20 @@ return 1;
 
 int lcp_array_write(int_t *SA, int_t *LCP, int_t n, char* c_file, const char* ext){
 
-        FILE *f_out;
-        char *c_out = malloc((strlen(c_file)+strlen(ext))*sizeof(char));
+  FILE *f_out;
+  char *c_out = malloc((strlen(c_file)+strlen(ext))*sizeof(char));
+  
+  sprintf(c_out, "%s.%s", c_file, ext);
+  f_out = file_open(c_out, "wb");
         
-        sprintf(c_out, "%s.%s", c_file, ext);
-        f_out = file_open(c_out, "wb");
-        
-	int_t i;
-	for(i=0; i<n; i++){//writes SA, LCP interleaved
-	        fwrite(&SA[i], sizeof(int_t), 1, f_out);
-	        fwrite(&LCP[i], sizeof(int_t), 1, f_out);
-	}
-
-        file_close(f_out);
-        free(c_out);
+  int_t i;
+  for(i=0; i<n; i++){//writes SA, LCP interleaved
+    fwrite(&SA[i], sizeof(int_t), 1, f_out);
+    fwrite(&LCP[i], sizeof(int_t), 1, f_out);
+  }
+  
+  file_close(f_out);
+  free(c_out);
 
 return 1;
 }

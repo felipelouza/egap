@@ -32,6 +32,40 @@ void close_bw_files(g_data *g) {
   free(g->bwf);
 }
 
+/******************************************************************************/
+
+// open a file for each input BWT, file pointers are stored to bwf[] 
+void open_da_files(g_data *g) {
+  assert(g->extMem);
+  g->daf = malloc(g->numBwt*sizeof(FILE *));
+  if(g->daf==NULL) die(__func__);
+  for(int i=0; i< g->numBwt; i++) {
+    g->daf[i] = fopen(g->dafname,"r");
+    if(!g->daf[i]) die(__func__);
+  }
+}
+
+// use bws[] to make bwf[i] point at the beginning of bws[i]  
+void rewind_da_files(g_data *g) {
+  assert(g->extMem);
+  for(int i=0; i< g->numBwt; i++) {
+    int e = fseek(g->daf[i],sizeof(int)*(g->bws[i]-g->bws[0]+g->symb_offset),SEEK_SET);
+    if(e!=0) die(__func__);
+  }
+}
+
+// use bws[] to make bwf[i] point at the beginning of bws[i]  
+void close_da_files(g_data *g) {
+  assert(g->extMem);
+  for(int i=0; i< g->numBwt; i++) {
+    int e = fclose(g->daf[i]);
+    if(e!=0) die(__func__);
+  }
+  free(g->daf);
+}
+
+/******************************************************************************/
+
 // creation of temporary files for irrelevant blocks
 // the file is not visible since it is deleted after creation
 FILE *gap_tmpfile(char* path)

@@ -104,6 +104,7 @@ typedef uint32_t palette;
 #define LEN_EXT "size"
 #define HM_BWT_EXT "bwtHM"
 #define DA_EXT "da"
+#define DA_BL_EXT "da_block"
 
 // structure for writing in a segment of a newMergeColor
 typedef struct{
@@ -149,7 +150,9 @@ typedef struct {
   };
   // external memory access 
   char bwfname[Filename_size];   // filename of the input bwt file 
+  char dafname[Filename_size];   // filename of the input DA file 
   FILE **bwf;              // bwf[0] ... bwf[numBwt-1] are pointer inside the input bwt file  
+  FILE **daf;              // daf[0] ... daf[numBwt-1] are pointer inside the input DA file  
   FILE *fmergeColor;       // mergecolor file   
   cwriter *fnewMergeColor; // newmergecolor files (one per symbol) 
   char *merge_fname;       // name of merge file

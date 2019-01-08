@@ -26,6 +26,8 @@ size_t file_size(FILE* f_in);
 int file_write(FILE* f_out, uint_t array);
 uint_t file_read(FILE* f_in);
 
+int file_write_array(FILE* f_out, int_t *A, int_t n);
+
 char* file_load(FILE* f_in) ;
 char** file_load_multiple(char* c_file, int k, size_t* n) ;
 

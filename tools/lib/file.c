@@ -61,12 +61,10 @@ return length;
 
 uint_t file_read(FILE* f_in){
 
-uint_t value;
+  uint_t value;
 
   int e = fread(&value, sizeof(uint_t), 1, f_in);
   if(e!=1) {perror("read error"); exit(1);}
-
-//  printf("read = %" PRIdN"\n", value);
 
 return value;
 }
@@ -75,10 +73,19 @@ return value;
 
 int file_write(FILE* f_out, uint_t value){
 
-//  printf("write(%" PRIdN")\n", value);
   fwrite(&value, sizeof(uint_t), 1, f_out);
 
 return 0;
+}
+
+
+/*******************************************************************/
+
+int file_write_array(FILE* f_out, int_t *A, int_t n){
+
+  fwrite(A, sizeof(int_t), n, f_out);
+
+return 1;
 }
 
 /*******************************************************************/

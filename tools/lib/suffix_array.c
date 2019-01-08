@@ -24,18 +24,18 @@ return 1;
 
 int_t* suffix_array_read(int_t n, char* c_file, const char* ext){
 
-        FILE *f_in;
-        char *c_in = malloc((strlen(c_file)+strlen(ext))*sizeof(char));
-
-        sprintf(c_in, "%s.%s", c_file, ext);
-        f_in = file_open(c_in, "rb");
-
-        int_t *SA = (int_t*) malloc(n*sizeof(int_t));
-        size_t e = fread(SA, sizeof(int_t), n, f_in);
-        if(e!=n) {perror(__func__); exit(1);}
-
-        file_close(f_in);
-        free(c_in);
+  FILE *f_in;
+  char *c_in = malloc((strlen(c_file)+strlen(ext))*sizeof(char));
+  
+  sprintf(c_in, "%s.%s", c_file, ext);
+  f_in = file_open(c_in, "rb");
+  
+  int_t *SA = (int_t*) malloc(n*sizeof(int_t));
+  size_t e = fread(SA, sizeof(int_t), n, f_in);
+  if(e!=n) {perror(__func__); exit(1);}
+  
+  file_close(f_in);
+  free(c_in);
 
 return SA;
 }

@@ -95,7 +95,8 @@ Pacbio.1000  | 8.0   | 8,589,934  | 1,000    | 1,000    | 876   | 18.05   | [.ta
 Pacbio       | 8.0   | 942,248    | 71,561   | 9,116    | 3,084 | 18.32   | [.tar.gz](https://drive.google.com/open?id=1JER4Ci1DyZtQERqILNbrebWBXQdVQrW4)
 
 
-We have also used versions of the above collections shortened to 1GB. The shortened versions can be obtained by the above files using [simple command line instructions](https://drive.google.com/open?id=1rjObN6fzXU_LrOLadCgxQ0bXh5mlTwNq). Check all [md5sums](https://drive.google.com/open?id=1CgoVBpElte6iQ6I1XkvYvi56lHqvq1kK) after dowloading and extraction.
+We have also used versions of the above collections shortened to 1GB. The shortened versions can be obtained by the above files using [simple command line instructions](https://drive.google.com/open?id=1rjObN6fzXU_LrOLadCgxQ0bXh5mlTwNq). 
+Check all [md5sums](https://drive.google.com/open?id=1CgoVBpElte6iQ6I1XkvYvi56lHqvq1kK) after dowloading and extraction.
 
 The results of our experiments are reported on the above WABI paper and on an extended journal version (in preparation).
 

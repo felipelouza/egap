@@ -37,18 +37,15 @@ typedef struct{
 } bitfile;
 
 void bitfile_flush(bitfile *b);
-void bitfile_create(bitfile *b, size_t size, char *path);
+void bitfile_create(bitfile *b, size_t size, char *path, bool);
 void bitfile_destroy(bitfile *b);
 void bitfile_rewind(bitfile *b);
 bool bitfile_read_or_write(bitfile *b, bool new);
 void bitfile_skip(bitfile *b, uint64_t s);
 off_t bitfile_tell(bitfile *b);
 
-
-
-
-
-
+// used for extract hi bit from mergefile for later dbGraph construction 
+void extract_bitfile(char *name, size_t size, char *outpath);
 
 
 #endif

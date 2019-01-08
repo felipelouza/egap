@@ -71,7 +71,7 @@ def main():
     show_command_line(logfile)
     logfile.flush()
 
-    # ---- phase1: concatenat/compute BWTs
+    # ---- phase1: concatenate/compute BWTs
     start0 = start = time.time()
     if phase1(args,logfile,logfile_name)!=True:
       sys.exit(1)   # fatal error during phase 1 
@@ -189,12 +189,12 @@ def phase1(args,logfile, logfile_name):
   else:        
     # ---- gSACAK    
     # shall we use gsaka or gsaka64?
-    if args.mem//5 < 2020:    # less that 10GB OK 32 bit 
+    if args.mem//5 < 2020:    # less than 10GB: OK 32 bit 
       exe = os.path.join(args.egap_dir,gsacak_exe)
-    elif args.mem//9 < 2020:  # less that 18GB, use 32bit with RAM = 10GB
+    elif args.mem//9 < 2020:  # less than 18GB: use 32bit with RAM = 10GB
       args.mem = 2020*5
       exe = os.path.join(args.egap_dir,gsacak_exe)
-    else:                     # mode than 18GB use 64bit version
+    else:                     # more than 18GB: use 64bit version
       exe = os.path.join(args.egap_dir,gsacak64_exe)
     # specify output base name  
     if len(args.out)==0:  outopt=""

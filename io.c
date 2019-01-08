@@ -178,19 +178,33 @@ void bitfile_flush(bitfile *b)
   assert(b->offset==(b->filesize+7)/8); 
 }
 
-// init a bitfile: opening an anonymous file and filling it with zeros 
-void bitfile_create(bitfile *b, size_t size, char *path) {
+// init a bitfile: opening file and filling it with size zero bits
+// if temp==true the file is anonymous and imemdiately deleted, otherwise 
+// the file has .bitfile extension and maintained after the end of the computation   
+void bitfile_create(bitfile *b, size_t size, char *path, bool temp) {
   // create local copy of template
   char s[strlen(path)+11];
-  sprintf(s,"%s.bitXXXXXX",path);
-  assert(strlen(s)==strlen(path) + 10);
-  // get file descriptor for tmp file fill it zith 0s and delete file  
-  b->fd = mkstemp(s);
-  if(b->fd == -1) die("bitfile_create: Tempfile creation failed");
-  int e = ftruncate(b->fd,(size+7)/8); // fill with size 0 bits
-  if(e!=0)        die("bitfile_create: Tempfile ftruncate failed");
-  e = unlink(s);
-  if(e!=0)        die("bitfile_create: Tempfile unlink failed");
+  if(temp) { // if this is a temp file create unique name 
+    sprintf(s,"%s.bitXXXXXX",path);
+    assert(strlen(s)==strlen(path) + 10);
+    // get file descriptor for tmp file fill it with 0s and delete file  
+    b->fd = mkstemp(s);
+    if(b->fd == -1) die("bitfile_create: Tempfile creation failed");
+    int e = ftruncate(b->fd,(size+7)/8); // fill with size 0 bits
+    if(e!=0)        die("bitfile_create: Tempfile ftruncate failed");
+    e = unlink(s);
+    if(e!=0)        die("bitfile_create: Tempfile unlink failed");
+    }
+  else { // we keep this file (to compute the DB-graph) 
+    sprintf(s,"%s.bitfile1",path);
+    assert(strlen(s)==strlen(path) + 9);
+    // get file descriptor for bitfile fill it with 0s  
+    b->fd = open(s,O_RDWR|O_CREAT|O_TRUNC, 0666);
+    if(b->fd == -1) die("bitfile_create: bitfileq creation failed");
+    int e = ftruncate(b->fd,(size+7)/8); // fill with size 0 bits
+    if(e!=0)        die("bitfile_create: bitfile ftruncate failed");
+  }
+  // initialization of other fields for b
   b->filesize = size;  // total size of the bitfile (in bits) 
   b->buffer = malloc(Bitfile_bufsize_bytes);
   if(!b->buffer)  die("bitfile_create: malloc error");
@@ -263,4 +277,38 @@ void bitfile_skip(bitfile *b, uint64_t s) {
 // return index of the next bit to be read
 off_t bitfile_tell(bitfile *b) {
   return 8*b->offset + b->cur;
+}
+
+// save hi bit of name to bitfile0
+// used for extracting info for dbGraph
+void extract_bitfile(char *name, size_t size, char *outpath)  
+{
+  FILE *f = fopen(name,"rb");
+  if(f==NULL) die("extract_bitfile: unable to open input file");
+  char s[strlen(outpath) + 10];
+  sprintf(s,"%s.bitfile0",outpath);
+  assert(strlen(s)==strlen(outpath) + 9);
+  FILE *g = fopen(s,"wb");
+  if(f==NULL) die("extract_bitfile: unable to open output file");
+  uint8_t buf=0;
+  palette p;
+  palette mask = ((uint64_t) 1) << ((8*sizeof(palette)) -1);
+  for(size_t i=0; i<size;i++) {
+    if(fread(&p, sizeof(palette), 1, f)!=1) {
+      die("extract_bitfile: error reading from input file");
+    }
+    if(p&mask) // last bit is 1
+      buf |= (1u << (i%8));
+    if(i%8==7) {
+      if(fwrite(&buf,1,1,g)!=1) 
+        die("extract_bitfile: error writing to output file");
+      buf = 0;
+    }
+  }
+  if(size%8 != 0) 
+    if(fwrite(&buf,1,1,g)!=1) 
+      die("extract_bitfile: error writing to output file");
+  assert(ftell(g)==(size+7)/8);  
+  fclose(g);
+  fclose(f);
 }

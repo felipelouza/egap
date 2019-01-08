@@ -32,7 +32,7 @@ void usage(char *name, g_data *g){
   puts("\t-r    merge lcp values (overwrite input LCPs)");
   puts("\t-l    compute lcp values");
   puts("\t-d    create document array, ext: ."DA_EXT);
-  puts("\t-x    do not use external mergesort for lcp compute");
+  puts("\t-x    compute lcp without external mergesort");
   puts("\t-a    assume alphabet is small");   
   printf("\t-g G  max # BWTs merged simultaneously (def %llu)\n", MAX_NUMBER_OF_BWTS);   
   puts("\t-A a  preferred gap algorithm to use (see doc or leave it alone)");   
@@ -43,6 +43,7 @@ void usage(char *name, g_data *g){
   puts("\t-T    mmap input BWT arrays (overwrite input BWTs)");
   puts("\t-Z    mmap merge arrays");
   puts("\t-B    mmap B array");
+  puts("\t-D k  compute order-k deBruijn graph info (def No)");
   puts("\t-v    verbose output (more v's for more verbose)\n");
 }
 
@@ -62,8 +63,9 @@ int main(int argc, char *argv[]) {
   g.outPath = NULL;
   g.extMem = g.algorithm = 0;
   g.smallAlpha=g.mmapZ=g.mmapBWT=g.mmapB= g.lcpMerge = g.lcpCompute = g.outputDA = false;
+  g.dbOrder = 0;           // order for deBruijn graph 
   int num_threads = 0;
-  while ((c=getopt(argc, argv, "vhalrxmdp:g:A:s:o:EZTB")) != -1) {
+  while ((c=getopt(argc, argv, "vhalrxmdp:g:A:s:o:EZTBD:")) != -1) {
     switch (c) 
       {
       case 'v':
@@ -89,6 +91,9 @@ int main(int argc, char *argv[]) {
         break;      
       case 'A':
         g.algorithm = atoi(optarg);     // preferred algorithm 
+        break;      
+      case 'D':
+        g.dbOrder = atoi(optarg);       // compute order-k db graph 
         break;      
       case 's':
         g.solid_limit = atoi(optarg);   // smallest solid block 

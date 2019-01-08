@@ -355,7 +355,7 @@ static bool addCharToPrefix(solidBlockFile *solidHead, liquidBlock *liquid, cust
 void gap(g_data *g, bool lastRound) {
   
   // maybe there is nothing to do
-  if(g->numBwt<2 && !g->lcpCompute) {
+  if(g->numBwt<2 && !g->lcpCompute && g->dbOrder==0) {
     assert(g->numBwt==1);
     if(g->verbose>0) puts("Single BWT/LCP merging: nothing to do!");
     return;

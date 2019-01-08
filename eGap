@@ -71,7 +71,7 @@ def main():
     show_command_line(logfile)
     logfile.flush()
 
-    # ---- phase1: concat/compute BWTs
+    # ---- phase1: concatenate/compute BWTs
     start0 = start = time.time()
     if phase1(args,logfile,logfile_name)!=True:
       sys.exit(1)   # fatal error during phase 1 

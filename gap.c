@@ -32,7 +32,7 @@ void usage(char *name, g_data *g){
   puts("\t-r    merge lcp values (overwrite input LCPs)");
   puts("\t-l    compute lcp values");
   puts("\t-d    create document array, ext: ."DA_EXT);
-  puts("\t-x    do not use external mergesort for lcp compute");
+  puts("\t-x    compute lcp without external mergesort");
   puts("\t-a    assume alphabet is small");   
   printf("\t-g G  max # BWTs merged simultaneously (def %llu)\n", MAX_NUMBER_OF_BWTS);   
   puts("\t-A a  preferred gap algorithm to use (see doc or leave it alone)");   

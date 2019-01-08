@@ -248,7 +248,7 @@ void gap128ext(g_data *g, bool lastRound) {
     // update solid block files:
     rewind(ibList->fout);
     ibList->fin = ibList->fout;
-  } while(!merge_completed || prefixLength!=g->dbOrder);  // end main loop
+  } while(!merge_completed && (prefixLength!=g->dbOrder));  // end main loop
   if(ibList->fin!=NULL) fclose(ibList->fin);
 
   if (g->verbose>0) {

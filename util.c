@@ -22,8 +22,10 @@ void array_clear(customInt* array, customInt size, customInt v) {
  *   bwtLen[]
  *   bws[]
  * 
- * Return false if the procsessing was not started since
- * there is a single sequence and there are not LCp values to compute   
+ * return true
+ * 
+ * (old version: Return false if the processing was not started since
+ * there is a single sequence and there are not LCP values to compute)   
  * */
 bool readBWTsingle(char *path, g_data *g)
 {
@@ -48,10 +50,12 @@ bool readBWTsingle(char *path, g_data *g)
     die("Invalid format of ."LEN_EXT" file");
   g->numBwt = flen/8;
   assert(g->numBwt>0);
+  #if 0
   if(g->numBwt==1 && !g->lcpCompute) {
     fclose(f);
     return false;
   }
+  #endif
   // now we have the correct number of (multi)BWTs: allocate g->bwtLen and g->bws  
   g->bwtLen = (customInt *) malloc (g->numBwt * sizeof(customInt));
   g->bws = (symbol **) malloc (g->numBwt * sizeof(symbol *));

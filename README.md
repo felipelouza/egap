@@ -100,5 +100,3 @@ Check all [md5sums](https://drive.google.com/open?id=1CgoVBpElte6iQ6I1XkvYvi56lH
 
 The results of our experiments are reported on the above WABI paper and on an extended journal version (in preparation).
 
-
-

@@ -332,8 +332,6 @@ void usage(char *name){
   puts("If len>0, it discards strings < len and cut strings > len .\n");
   puts("Available options:");
   puts("\t-h\tthis help message");
-  //puts("\t-m RAM  available memory (in KB) to be used by gSACA-k algorithm");
-  //puts("\t-g D\tLCP in gap format D bytes per entry (ext: .D.lcp)");
   exit(EXIT_FAILURE);
 }
 
@@ -356,7 +354,7 @@ int main(int argc, char **argv) {
       case 't':
         time++; break;
       case 'h':
-        usage(argv[0]); break;       // show usage and stop
+        usage(argv[0]); break; 
       case '?':
         exit(EXIT_FAILURE);
       }
@@ -365,7 +363,6 @@ int main(int argc, char **argv) {
 
   if(optind+3==argc) {
     c_file=argv[optind++];
-    //size= (size_t) atoi(argv[optind++]);
     sscanf(argv[optind++], "%zu", &size);
     sscanf(argv[optind++], "%zu", &len);
   }

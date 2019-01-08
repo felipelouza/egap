@@ -108,7 +108,7 @@ return c_buffer;
 /*******************************************************************/
 
 // read line by line
-int_t* count_multiple_txt(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, int_t *chunks) {
+int_t* count_multiple_txt(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, int_t *chunks, ssize_t** pos) {
 
   if((*k)==0) (*k)=I_MAX;
   
@@ -116,6 +116,10 @@ int_t* count_multiple_txt(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, in
 
   int nalloc = 128;
   int_t *K = (int_t*) malloc(nalloc*sizeof(int_t));
+  (*pos) = (ssize_t*) malloc((nalloc+1)*sizeof(ssize_t));
+
+	ssize_t tell=0;
+	(*pos)[0]=tell;
 
   int i;
   int_t d=0;
@@ -137,40 +141,48 @@ int_t* count_multiple_txt(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, in
     sum += size;//sum of lengths
 
     if(sum > chunk_size){
-      //printf("K[%d] = %d\tsum = %lu\n", (*chunks), d-1, sum-size);
+      //printf("K[%d] = %d\tsum = %lu\n", (*chunks), max(1,d-1), sum);
       
-      K[(*chunks)++]=d-1;
+      K[(*chunks)++]=max(1,d-1);
+      (*pos)[(*chunks)]=tell;
+			if(d==1) d=0;
       sum = size; d=1;
 
       if((*chunks) > nalloc){
         nalloc += 128;
         K = realloc(K, sizeof(int_t) * nalloc);
+        (*pos) = realloc((*pos), sizeof(ssize_t) * (nalloc+1));
       }
     }
 
     (*n) += size;
+		tell = ftell(f_in);
   }
 
   {//last chunk
-    //printf("K[%d] = %d\tsum = %lu\n", (*chunks), d, sum);
+    //printf("**K[%d] = %d\tsum = %lu\n", (*chunks), d, sum);
     K[(*chunks)++]=d;
   }
 
 return K;
 }
 
-int_t* count_multiple_fastq(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, int_t *chunks) {
+int_t* count_multiple_fastq(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, int_t *chunks, ssize_t **pos) {
 
   if((*k)==0) (*k)=I_MAX;
   size_t sum=0;
 
   int nalloc = 128;
   int_t *K = (int_t*) malloc(nalloc*sizeof(int_t));
+  (*pos) = (ssize_t*) malloc((nalloc+1)*sizeof(ssize_t));
+    
 
   int i;
   int_t d=0;
   size_t len = 0;
   char *buf = NULL;
+	ssize_t tell=0;
+	(*pos)[0]=tell;
 
   for(i=0; i<(*k); i++){
 
@@ -197,11 +209,13 @@ int_t* count_multiple_fastq(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
       //printf("K[%d] = %d\tsum = %lu\n", (*chunks), d-1, sum-size);
       
       K[(*chunks)++]=d-1;
+      (*pos)[(*chunks)]=tell;
       sum = size; d=1;
 
       if((*chunks) > nalloc){
         nalloc += 128;
         K = realloc(K, sizeof(int_t) * nalloc);
+        (*pos) = realloc((*pos), sizeof(ssize_t) * (nalloc+1));
       }
     }
 
@@ -216,7 +230,7 @@ int_t* count_multiple_fastq(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
     //printf("Line of size: %d\n", strlen(buf));
     free(buf);buf = NULL;
     //printf("Line %d OK\n", i);
-    // free(buf);
+		tell = ftell(f_in);
   }
 
   {//last chunk
@@ -227,7 +241,7 @@ int_t* count_multiple_fastq(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
 return K;
 }
 
-int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, int_t *chunks) {
+int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, int_t *chunks, ssize_t** pos) {
 
   if((*k)==0) (*k)=I_MAX;
   size_t sum=0;
@@ -235,6 +249,10 @@ int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
 
   int nalloc = 128;
   int_t *K = (int_t*) malloc(nalloc*sizeof(int_t));
+  (*pos) = (ssize_t*) malloc((nalloc+1)*sizeof(ssize_t));
+
+	ssize_t tell_cat=0, tell=0;
+	(*pos)[0]=tell;
 
 /**/
   char *buf = NULL;
@@ -260,13 +278,15 @@ int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
         count++;
         break;
       }
+			tell_cat = ftell(f_in);
       p+=strlen(buf)-1;
     }
+
+    d++;//number of strings
 
     if (size == -1){//EOF
       (*k) = i+1;
       free(buf);
-      d++;
       sum+=p+1;
       (*n) += p+1;
       break;   
@@ -276,23 +296,25 @@ int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
     free(buf);
     size = p+1;
 
-    d++;//number of strings
     sum += size;//sum of lengths
 
     if(sum > chunk_size){
 
       //printf("K[%d] = %d\tsum = %lu\n", (*chunks), d-1, sum-size);
 
-      K[(*chunks)++]=d-1;
+      K[(*chunks)++]=max(1,d-1);
+      (*pos)[(*chunks)]=tell;
       sum = size; d=1;
 
       if((*chunks) > nalloc){
         nalloc += 128;
         K = realloc(K, sizeof(int_t) * nalloc);
+        (*pos) = realloc((*pos), sizeof(ssize_t) * (nalloc+1));
       }
     }
 
     (*n) += p+1;
+		tell=tell_cat;
   }
 
   {//last chunk
@@ -376,7 +398,7 @@ char** load_multiple_fasta(FILE* f_in, int_t k, size_t *n){
   size = getline(&buf, &len, f_in);// first sequence
   free(buf);
 
-  size_t seek=0;
+  size_t tell=0;
 
   int count=0;
   int_t i;
@@ -406,7 +428,7 @@ char** load_multiple_fasta(FILE* f_in, int_t k, size_t *n){
       strcpy(&c_buffer[i][p], buf);
       p+=strlen(buf)-1;
       
-      seek = ftell(f_in);
+      tell = ftell(f_in);
       free(buf); len=0; buf=NULL;
     }
 /*
@@ -422,14 +444,13 @@ char** load_multiple_fasta(FILE* f_in, int_t k, size_t *n){
     (*n) += p+1;
   }
 
-fseek(f_in , seek, SEEK_SET);
-
+fseek(f_in , tell, SEEK_SET);
 return c_buffer;
 }
 
 /*******************************************************************/
 
-int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t *chunks, size_t *n, FILE *f_in) {
+int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t *chunks, size_t *n, FILE *f_in, ssize_t **pos) {
 
 /* .ext
  * .txt   - strings per line
@@ -439,15 +460,16 @@ int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t *chu
 
   const char *type = get_filename_ext(c_file);
   int_t *K = NULL; 
+  *pos = NULL; 
 
   if(strcmp(type,"txt") == 0)
-    K = count_multiple_txt(f_in, k, chunk_size, n, chunks);
+    K = count_multiple_txt(f_in, k, chunk_size, n, chunks, pos);
 
   else if(strcmp(type,"fasta") == 0 || strcmp(type,"fa")==0 )
-    K = count_multiple_fasta(f_in, k, chunk_size, n, chunks);
+    K = count_multiple_fasta(f_in, k, chunk_size, n, chunks, pos);
 
   else if(strcmp(type,"fastq") == 0)
-    K = count_multiple_fastq(f_in, k, chunk_size, n, chunks);
+    K = count_multiple_fastq(f_in, k, chunk_size, n, chunks, pos);
 
   else{
     printf("Error: file not recognized (.txt, .fa, .fasta, .fastq)\n");

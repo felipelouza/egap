@@ -1,3 +1,4 @@
+// vim: noai:ts=2:sw=2
 /*
  * Induced Suffix Sorting and LCP array construction for String Collections
  *
@@ -49,6 +50,7 @@ void usage(char *name){
   puts("\t-x      extract individual input files and stop");
   puts("\t-X      convert input to raw+len format (ext: .cat .len) and stop");
   // puts("\t-L    lengths of the input sequences in FILE.len (no separator)");
+  puts("\t-R      compute data structures for the reversed string\n");
   puts("\t-v      verbose output (more v's for more verbose)\n");
   printf("sizeof(int): %zu bytes\n", sizeof(int_t));
   printf("Max text size: %zu\n", WORD);
@@ -62,19 +64,19 @@ int main(int argc, char** argv){
   extern int optind, opterr, optopt;
   
   // parse command line
-  int VALIDATE=0, OUTPUT=0, LCP_COMPUTE=0;
+  int VALIDATE=0, OutputSA=0, LCP_COMPUTE=0;
   int_t k=0;
-  int Verbose=0, OutputGapLcp=0, OutputBwt=0, Extract=0, c; // len_file=0;
+  int Verbose=0, OutputGapLcp=0, OutputBwt=0, Extract=0, Reversed=0, c; // len_file=0;
   char *c_file=NULL, *outfile=NULL;
   size_t RAM=0;
 
-  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:")) != -1) {
+  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:R")) != -1) {
     switch (c) 
       {
       case 'c':
         VALIDATE=1; break;          // validate output
       case 's':
-        OUTPUT=1; break;            // output SA possibly combined with LCP
+        OutputSA=1; break;            // output SA possibly combined with LCP
       case 'l':
         LCP_COMPUTE=1;  break;      // compute LCP 
       case 'v':
@@ -93,6 +95,8 @@ int main(int argc, char** argv){
         RAM=(size_t)atoi(optarg)*MB; break;
       case 'o':
         outfile = optarg; break;     // output file base name  
+      case 'R':
+        Reversed++; break;
       case '?':
         exit(EXIT_FAILURE);
       }
@@ -155,8 +159,10 @@ int main(int argc, char** argv){
 
   //number of chunks
   int_t chunks = 0;
+  //pos[i] stores the position of chunk C_i in the file
+  ssize_t* pos = NULL; 
   //K[i] stores the number of strings into chunk C_i
-  int_t* K = file_count_multiple(c_file, &k, chunk_size, &chunks, &n, f_in);
+  int_t* K = file_count_multiple(c_file, &k, chunk_size, &chunks, &n, f_in, &pos);
 
   printf("K = %" PRIdN "\n", k);
   printf("N = %zu\n", n+1);
@@ -164,7 +170,7 @@ int main(int argc, char** argv){
   printf("CHUNKS = %" PRIdN "\n", chunks);
   printf("sizeof(int_t) = %zu bytes\n", sizeof(int_t));
   printf("##\n");
-  //for(i=0; i<chunks; i++) printf("K[%" PRIdN "] = %" PRIdN "\n", i, K[i]);
+  //for(i=0; i<chunks; i++) printf("K[%" PRIdN "] = %" PRIdN "\t %zu\n", i, K[i], pos[i]);
 /**/
 
   int_t b=0;
@@ -209,18 +215,24 @@ int main(int argc, char** argv){
 
     // disk access
     //if(len_file==0)
-    R = (unsigned char**) file_load_multiple_chunks(c_file, K[b], &len, f_in);
+    int_t bl = b;
+		#if	REVERSE_SCHEME==2
+	    if(Reversed) bl = chunks-(b+1);
+		#endif
+    fseek(f_in, pos[bl], SEEK_SET);
+
+    R = (unsigned char**) file_load_multiple_chunks(c_file, K[bl], &len, f_in);
    
     if(!R){
-      fprintf(stderr, "Error: less than %" PRIdN " strings in %s\n", K[b], c_file);
+      fprintf(stderr, "Error: less than %" PRIdN " strings in %s\n", K[bl], c_file);
       return 0;
     }
-    // now R[0] ... R[K[b]-1] contains the input documents  
+    // now R[0] ... R[K[bl]-1] contains the input documents  
     if(Verbose)
-      printf("%" PRIdN "\t%" PRIdN "\t%lu\n", b, K[b], len);
+      printf("%" PRIdN "\t%" PRIdN "\t(%lu)\t%zu\n", bl, K[bl], len, pos[bl]);
         
-    if(Extract>1) {   // save documents in chunk b in raw cat+len forma
-      for(i=0;i<K[b];i++) {
+    if(Extract>1) {   // save documents in chunk bl in raw cat+len forma
+      for(i=0;i<K[bl];i++) {
         uint64_t j = 1 + strlen((char *)R[i]);
         #if  __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
           size_t z = fwrite(&j,4,1,f_len);
@@ -235,7 +247,7 @@ int main(int argc, char** argv){
         }
       }
       //free memory
-      for(i=0; i<K[b]; i++) free(R[i]);
+      for(i=0; i<K[bl]; i++) free(R[i]);
       free(R);
       continue; // go to next chunk
     }
@@ -243,22 +255,35 @@ int main(int argc, char** argv){
     // compute generalized SA for string collection
     //concatenate strings R[i] to str
     unsigned char *str = NULL;
-    str = cat_char(R, K[b], &len);
+
+		if(!Reversed)	str = cat_char(R, K[bl], &len);
+		else	str = cat_char_rev(R, K[bl], &len);
+
     #if DEBUG
       int_t i;
       for(i=0;i<min(10,len); i++)
          printf("%" PRIdN ") %d\n", i, str[i]);
       printf("\n");
-    #endif
 
-    #if DEBUG
       printf("R:\n");
-      for(i=0; i<min(5,K[b]); i++)
+      for(i=0; i<min(5,K[bl]); i++){
         printf("%" PRIdN ") %s (%zu)\n", i, R[i], strlen((char*)R[i]));
+      }
+      if(Reversed){
+			 printf("Reverse scheme: %d\n", REVERSE_SCHEME);
+       int count=0;
+        printf("T^rev = ");
+        for(i=0;i<len; i++){
+          if(str[i]>1) printf("%c", str[i]-1);
+          else{ count++; printf("%d", str[i]);}
+          if(count==5) break;
+        }
+        printf("\n");
+      }
     #endif
   
     //free memory
-    for(i=0; i<K[b]; i++) free(R[i]);
+    for(i=0; i<K[bl]; i++) free(R[i]);
     free(R);
 
     // alloc and init SA 
@@ -295,14 +320,11 @@ int main(int argc, char** argv){
           assert(SA[i]==len-1);
         else {
           c = bwt(SA[i],str);
-        if(OutputBwt>1){ //RLE for DNA sequences
-        
+          if(OutputBwt>1){ //RLE for DNA sequences        
           unsigned char run=1;
-          
           while(i+1<len && bwt(SA[i+1],str)==c && run<32){
             run++;i++;
-          }
-          
+          }        
           #if DEBUG
             printf("<%c, %d> = ", c, run);
           #endif
@@ -310,14 +332,14 @@ int main(int argc, char** argv){
           #if DEBUG
             printf("%d\n", c);
           #endif
-          }
-          int err = fputc(c,f_bwt);
-          if(err==EOF) die(__func__);
         }
+        int err = fputc(c,f_bwt);
+        if(err==EOF) die(__func__);
       }
-      // write BWT size to file 
-      size_t len1 = len-1;
-      fwrite(&len1,sizeof(size_t), 1, f_size);
+    }
+    // write BWT size to file 
+    size_t len1 = len-1;
+    fwrite(&len1,sizeof(size_t), 1, f_size);
     }
   
     if(Verbose>2) {
@@ -336,10 +358,10 @@ int main(int argc, char** argv){
     }
   
     // output SA alone or SA&LCP together
-    if(OUTPUT){
+    if(OutputSA){
       char tmp[500]; 
-      if(LCP_COMPUTE) snprintf(tmp,500,"%" PRIdN ".sa_lcp",b);
-      else snprintf(tmp,500,"%" PRIdN ".sa",b);
+      if(LCP_COMPUTE) snprintf(tmp,500,"%" PRIdN ".sa_lcp",bl);
+      else snprintf(tmp,500,"%" PRIdN ".sa",bl);
 
       if(LCP_COMPUTE) lcp_array_write(SA, LCP, len, outfile, tmp);
       else suffix_array_write(SA, len, outfile, "sa");
@@ -367,6 +389,7 @@ int main(int argc, char** argv){
 
   fclose(f_in);
   free(K);
+  free(pos);
 
   printf("total:\n");
   fprintf(stderr,"%.6lf\n", time_stop(t_total, c_total));

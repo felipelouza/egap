@@ -52,6 +52,8 @@ def main():
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
   parser.add_argument('--sum', help='compute output files shasum',action='store_true')
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
+  parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
+  parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
@@ -197,8 +199,12 @@ def phase1(args,logfile, logfile_name):
     # specify output base name  
     if len(args.out)==0:  outopt=""
     else:                 outopt="-o " + args.basename
-    command = "{exe} -b -m {mem} {output} {ifile} 0".format(exe=exe, 
-              mem=args.mem, output=outopt, ifile=args.input[0])
+    options = "-b"
+    if(args.rev): options += "R"    # reverse string as input 
+    if(args.sa):  options += "s"    # output SA (ext: .sa)
+    if(args.v):   options += "v"    # increase verbosity level
+    command = "{exe} {opts} -m {mem} {output} {ifile} 0".format(exe=exe, 
+              mem=args.mem, output=outopt, ifile=args.input[0], opts=options)
     # execute choosen algorithm           
     print("==== gSACAK\n Command:", command)
     return execute_command(command,logfile,logfile_name)

@@ -50,6 +50,15 @@ bool readBWTsingle(char *path, g_data *g)
     die("Invalid format of ."LEN_EXT" file");
   g->numBwt = flen/8;
   assert(g->numBwt>0);
+
+  if(g->numBwt==1 && g->outputDA && !g->lcpCompute) {
+    char tmp1[Filename_size];
+    char tmp2[Filename_size];
+    snprintf(tmp1,Filename_size,"%s.%s",path,DA_BL_EXT);
+    snprintf(tmp2,Filename_size,"%s.%s",path,DA_EXT);
+    rename(tmp1,tmp2);
+  }
+
   #if 0
   if(g->numBwt==1 && !g->lcpCompute) {
     fclose(f);
@@ -446,8 +455,13 @@ void mergeBWT8(g_data *g, bool lastRound)
 
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0); // clear counter inside each bwt
-  if(g->outputDA && lastRound)
+  if(g->outputDA && lastRound){
     daOutFile = openDAFile(g);    
+    snprintf(g->dafname,Filename_size,"%s.%s",g->outPath,DA_BL_EXT);
+    open_da_files(g);
+    rewind_da_files(g);   // set file pointers at the beginning of each DA
+  }
+
   if(g->extMem) {
     open_bw_files(g);     // open files in read/write mode
     rewind_bw_files(g);   // set file pointers at the beginning of each BWT 
@@ -461,9 +475,15 @@ void mergeBWT8(g_data *g, bool lastRound)
     if(g->lcpCompute && lastRound)
       assert( ((g->mergeColor[i]>>2*shift) & 3)==3);    
     // if requested output merge array
-    if(g->outputDA && lastRound) 
-      if(fputc(currentColor, daOutFile)==EOF)
-        die("mergeBWT8: Error writing to Document Array file");   
+    if(g->outputDA && lastRound){ 
+      int da_value=0;
+      int e = fread(&da_value, sizeof(int), 1, g->daf[currentColor]);
+      if(e!=1) die(__func__);
+      //if(fputc(currentColor, daOutFile)==EOF)
+      if(fwrite(&da_value, sizeof(int), 1, daOutFile)==EOF)
+        die("mergeBWT128ext: Error writing to Document Array file");   
+      //printf("%d ==> %d\n", currentColor, da_value);
+		}	
     // save new BWT char overwriting mergeColor[i]
     if(g->extMem) {
       int e = fread(bwtout+i,sizeof(symbol),1,g->bwf[currentColor]);
@@ -477,9 +497,11 @@ void mergeBWT8(g_data *g, bool lastRound)
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
   if(g->extMem) close_bw_files(g);
   // close document array file 
-  if(g->outputDA && lastRound)
-      if(fclose(daOutFile)!=0) die("mergeBWT8: Error closing Document Array file");       
-  
+  if(g->outputDA && lastRound){
+    if(fclose(daOutFile)!=0) die("mergeBWT8: Error closing Document Array file");       
+    remove(g->dafname);
+  }
+
   // merging done: copy back to g->bws[0] or to file
   if(g->extMem) {
     if(g->verbose>1) printf("Copy back to file. Bytes: %ld, offset %ld\n",g->mergeLen, g->symb_offset);

@@ -64,13 +64,13 @@ int main(int argc, char** argv){
   extern int optind, opterr, optopt;
   
   // parse command line
-  int VALIDATE=0, OutputSA=0, LCP_COMPUTE=0;
+  int VALIDATE=0, OutputSA=0, LCP_COMPUTE=0, DA_COMPUTE=0;
   int_t k=0;
   int Verbose=0, OutputGapLcp=0, OutputBwt=0, OutputDA=0, Extract=0, Reversed=0, c; // len_file=0;
   char *c_file=NULL, *outfile=NULL;
   size_t RAM=0;
 
-  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:Rd")) != -1) {
+  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:Rd:")) != -1) {
     switch (c) 
       {
       case 'c':
@@ -98,7 +98,7 @@ int main(int argc, char** argv){
       case 'R':
         Reversed++; break;
 			case 'd':
-				OutputDA++; break;
+				OutputDA=atoi(optarg); DA_COMPUTE=1; break;
       case '?':
         exit(EXIT_FAILURE);
       }
@@ -143,6 +143,7 @@ int main(int argc, char** argv){
   // number of arrays used by the algorithm  
   int arrays = 1;
   if(LCP_COMPUTE) arrays++;
+  if(DA_COMPUTE) arrays++;
   
   // compute chuck size as a function of RAM 
   size_t chunk_size;
@@ -209,9 +210,9 @@ int main(int argc, char** argv){
     f_lcp = file_open(s, "wb");
   }
 
-  if(OutputDA) {
+  if(DA_COMPUTE) {
     char s[500]; 
-    snprintf(s,500,"%s.da_block",outfile); 
+    snprintf(s,500,"%s.%d.da_bl",outfile,OutputDA); 
     f_da = file_open(s, "wb");
   }
 
@@ -307,7 +308,7 @@ int main(int argc, char** argv){
       for(i=0; i<len; i++) LCP[i]=0;
     }
 		int_t *DA = NULL;
-		if(OutputDA){
+		if(DA_COMPUTE){
       DA = (int_t*) malloc(len*sizeof(int_t));
       for(i=0; i<len; i++) DA[i]=0;
 		}
@@ -354,10 +355,10 @@ int main(int argc, char** argv){
     }
 
     // output DA alone
-    if(OutputDA){
+    if(DA_COMPUTE){
 			//printf("%d\t%zu\t%d\t k = %d\n", len, sum*sizeof(int), curr, K[bl]);
       for(i=0; i<len; i++) DA[i]+=curr;
-      file_write_array(f_da, DA+1, len-1);//ignore the first DA-value
+      file_write_array(f_da, DA+1, len-1, OutputDA);//ignore the first DA-value
     }
 
     if(Verbose>2) {
@@ -402,7 +403,7 @@ int main(int argc, char** argv){
     // free SA (LCP) and concatenated input collection  
     free(SA);
     if(LCP_COMPUTE) free(LCP);
-		if(OutputDA) free(DA);
+		if(DA_COMPUTE) free(DA);
     free(str);
     
 		curr+=K[bl];
@@ -431,7 +432,7 @@ int main(int argc, char** argv){
     fclose(f_lcp);
   }
 
-  if(OutputDA){
+  if(DA_COMPUTE){
     fclose(f_da);
   }
 

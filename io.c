@@ -49,7 +49,7 @@ void open_da_files(g_data *g) {
 void rewind_da_files(g_data *g) {
   assert(g->extMem);
   for(int i=0; i< g->numBwt; i++) {
-    int e = fseek(g->daf[i],sizeof(int)*(g->bws[i]-g->bws[0]+g->symb_offset),SEEK_SET);
+    int e = fseek(g->daf[i],(g->outputDA)*(g->bws[i]-g->bws[0]+g->symb_offset),SEEK_SET);
     if(e!=0) die(__func__);
   }
 }

@@ -104,7 +104,7 @@ typedef uint32_t palette;
 #define LEN_EXT "size"
 #define HM_BWT_EXT "bwtHM"
 #define DA_EXT "da"
-#define DA_BL_EXT "da_block"
+#define DA_BL_EXT "da_bl"
 
 // structure for writing in a segment of a newMergeColor
 typedef struct{
@@ -131,7 +131,7 @@ typedef struct {
   bool lcpCompute;         // compute LCP from scratch
   bool mwXMerge;           // use external multiway mergesort when computing LCP from scratch
   int dbOrder;             // if > 1 output info useful for order-k dbGraph construction (only with -A 128) 
-  bool outputDA;           // output Merge array (=Document Array) for last iteration
+  int outputDA;            // output Merge array (=Document Array) for last iteration
   FILE *unsortedLcp;       // if !NULL file containing unsorted LCP values
   FILE *unsortedLcp_size;  // if !NULL file containing the size of sorted blocks in unsorted_Lcp
   bool smallAlpha;         // the alphabet is small

@@ -26,6 +26,9 @@ this will produce the output files: file.fasta.bwt, file.fasta.2.lcp
 The option --lbytes specifies the number of bytes used for each LCP entry
 and such number becomes part of the lcp file name.
 
+The option --dbytes specifies the number of bytes used for each DA entry
+and such number becomes part of the da file name.
+
 All input and output files are uncompressed!
 
 --------------------------
@@ -50,6 +53,7 @@ def main():
   parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
   parser.add_argument('-m', '--mem', help='available memory in MB (def. 4096)', default=4096, type=int)
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
+  parser.add_argument('--dbytes', help='bytes x DA entry (def. 4)', default=4, type=int)  
   parser.add_argument('--sum', help='compute output files shasum',action='store_true')
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
   parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
@@ -115,7 +119,7 @@ def main():
         digest = file_digest("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes),logfile)
         print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
       if args.da:
-        digest = file_digest(args.basename+".da",logfile)
+        digest = file_digest("{f}.{n}.da".format(f=args.basename,n=args.dbytes),logfile)
         print("DA  {exe}: {digest}".format(exe=shasum_exe, digest=digest))
     # -------- delete output files if required 
     if (args.sum and args.delete):
@@ -124,7 +128,8 @@ def main():
         if args.lcp:
           os.remove("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes))
         if args.da:
-          os.remove(args.basename+".da")
+          #os.remove(args.basename+".da")
+          os.remove("{f}.{n}.da".format(f=args.basename,n=args.dbytes))
       except OSError as  e:                 
         # if failed, report it back to the user and stop
         print ("Error: %s - %s." % (e.filename,e.strerror))      
@@ -166,6 +171,9 @@ def check_input(args):
   if args.lbytes!=1 and args.lbytes!=2 and args.lbytes!=4:
     print("The number of bytes for LCP entry must be 1, 2 or 4")
     sys.exit(1)
+  if args.dbytes!=1 and args.dbytes!=2 and args.dbytes!=4:
+    print("The number of bytes for DA entry must be 1, 2 or 4")
+    sys.exit(1)
   if args.delete and not args.sum:
     print("Option --delete can only be used with --sum")
     sys.exit(1) 
@@ -200,10 +208,10 @@ def phase1(args,logfile, logfile_name):
     if len(args.out)==0:  outopt=""
     else:                 outopt="-o " + args.basename
     options = "-b"
+    if(args.v):   options += "v"    # increase verbosity level
     if(args.rev): options += "R"    # reverse string as input 
     if(args.sa):  options += "s"    # output SA (ext: .sa)
-    if(args.da):  options += "d"    # output DA (ext: .da)
-    if(args.v):   options += "v"    # increase verbosity level
+    if(args.da):  options += "d{byts}".format(byts = args.dbytes)    # output DA (ext: .da)
     command = "{exe} {opts} -m {mem} {output} {ifile} 0".format(exe=exe, 
               mem=args.mem, output=outopt, ifile=args.input[0], opts=options)
     # execute choosen algorithm           
@@ -225,9 +233,9 @@ def phase2(args,logfile, logfile_name):
     # input 3 times smaller than assigned ram: internal algorithm 
     options = "-g256 -vaT"
   exe = os.path.join(args.egap_dir,gap_exe)
-  if(args.lcp): options += "l"  # generate lcp
-  if(args.da): options += "d"   # generate da
   if(args.v): options += "v"    # increase verbosity level
+  if(args.lcp): options += "l"  # generate lcp
+  if(args.da): options += "d{byts}".format(byts = args.dbytes)    # output DA (ext: .da)
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
               byts = args.lbytes, opts=options, ibase=args.basename)
   print("==== gap\n Command:", command)

@@ -81,9 +81,9 @@ return 0;
 
 /*******************************************************************/
 
-int file_write_array(FILE* f_out, int_t *A, int_t n){
+int file_write_array(FILE* f_out, int_t *A, int_t n, ssize_t size){
 
-  fwrite(A, sizeof(int_t), n, f_out);
+  fwrite(A, size, n, f_out);
 
 return 1;
 }

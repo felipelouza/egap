@@ -54,8 +54,8 @@ bool readBWTsingle(char *path, g_data *g)
   if(g->numBwt==1 && g->outputDA && !g->lcpCompute) {
     char tmp1[Filename_size];
     char tmp2[Filename_size];
-    snprintf(tmp1,Filename_size,"%s.%s",path,DA_BL_EXT);
-    snprintf(tmp2,Filename_size,"%s.%s",path,DA_EXT);
+    snprintf(tmp1,Filename_size,"%s.%d.%s",path,g->outputDA, DA_BL_EXT);
+    snprintf(tmp2,Filename_size,"%s.%d.%s",path,g->outputDA, DA_EXT);
     rename(tmp1,tmp2);
   }
 
@@ -236,7 +236,7 @@ static FILE *openDAFile(g_data *g)
 
   if(g->verbose>1) puts("Writing Document Array");
   assert(g->outputDA);
-  snprintf(filename,Filename_size,"%s.%s",g->outPath,DA_EXT);
+  snprintf(filename,Filename_size,"%s.%d.%s",g->outPath,g->outputDA,DA_EXT);
   FILE *f = fopen(filename,"wb");
   if(f==NULL) die("Error opening Document array file");
   return f;
@@ -341,7 +341,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   rewind_bw_files(g);   // set file pointers at the beginning of each BWT
 
 	if(g->outputDA && lastRound){
-    snprintf(g->dafname,Filename_size,"%s.%s",g->outPath,DA_BL_EXT);
+    snprintf(g->dafname,Filename_size,"%s.%d.%s",g->outPath,g->outputDA, DA_BL_EXT);
     open_da_files(g);
 		rewind_da_files(g);   // set file pointers at the beginning of each DA
 	}
@@ -363,10 +363,10 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     // if requested output merge array
     if(g->outputDA && lastRound){ 
 			int da_value=0;
-			int e = fread(&da_value, sizeof(int), 1, g->daf[currentColor]);
+			int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
       if(e!=1) die(__func__);
       //if(fputc(currentColor, daOutFile)==EOF)
-      if(fwrite(&da_value, sizeof(int), 1, daOutFile)==EOF)
+      if(fwrite(&da_value, g->outputDA, 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   
 			//printf("%d ==> %d\n", currentColor, da_value);
 		}	
@@ -457,7 +457,7 @@ void mergeBWT8(g_data *g, bool lastRound)
   array_clear(g->inCnt,g->numBwt,0); // clear counter inside each bwt
   if(g->outputDA && lastRound){
     daOutFile = openDAFile(g);    
-    snprintf(g->dafname,Filename_size,"%s.%s",g->outPath,DA_BL_EXT);
+    snprintf(g->dafname,Filename_size,"%s.%d.%s",g->outPath,g->outputDA, DA_BL_EXT);
     open_da_files(g);
     rewind_da_files(g);   // set file pointers at the beginning of each DA
   }
@@ -477,10 +477,10 @@ void mergeBWT8(g_data *g, bool lastRound)
     // if requested output merge array
     if(g->outputDA && lastRound){ 
       int da_value=0;
-      int e = fread(&da_value, sizeof(int), 1, g->daf[currentColor]);
+      int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
       if(e!=1) die(__func__);
       //if(fputc(currentColor, daOutFile)==EOF)
-      if(fwrite(&da_value, sizeof(int), 1, daOutFile)==EOF)
+      if(fwrite(&da_value, g->outputDA, 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   
       //printf("%d ==> %d\n", currentColor, da_value);
 		}	

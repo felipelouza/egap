@@ -45,5 +45,5 @@ clean:
 	make clean -C tools
 
 remove:
-	\rm -f dataset/*.bwt dataset/*.lcp dataset/*.sa_lcp dataset/*.sa dataset/*.da dataset/*.size dataset/*.log
+	\rm -f dataset/*.bwt dataset/*.lcp dataset/*.sa_lcp dataset/*.sa dataset/*.da_bl dataset/*.da dataset/*.size dataset/*.log
 

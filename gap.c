@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
       case 'x':
         g.mwXMerge=false; break;      // do not use external multiway merge sort for computing lcp values
       case 'd':
-        g.outputDA = atoi(optarg); break;       // output Document Array (for last iteration only) 
+        g.outputDA = atoi(optarg); break;  // output Document Array (for last iteration only) 
       case 'm':
         hm=true; break;                 // use hm algorithm 
       case 'a':
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
         g.algorithm = atoi(optarg);     // preferred algorithm 
         break;      
       case 'D':
-        g.dbOrder = atoi(optarg);       // compute order-k db graph 
+        g.dbOrder = atoi(optarg);       // if > 1 compute order-k db graph 
         break;      
       case 's':
         g.solid_limit = atoi(optarg);   // smallest solid block 

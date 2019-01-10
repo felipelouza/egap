@@ -254,7 +254,7 @@ void mergeBWTandLCP(g_data *g, bool lastRound)
   array_clear(g->inCnt,g->numBwt,0);
   if(g->outputDA && lastRound){
     daOutFile = openDAFile(g);
-	}
+  }
   if(g->extMem) {
     open_bw_files(g);// open files in read mode
     rewind_bw_files(g);   // set file pointers at the beginning of each BWT
@@ -340,11 +340,11 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   open_bw_files(g);     // open files in read mode
   rewind_bw_files(g);   // set file pointers at the beginning of each BWT
 
-	if(g->outputDA && lastRound){
+  if(g->outputDA && lastRound){
     snprintf(g->dafname,Filename_size,"%s.%d.%s",g->outPath,g->outputDA, DA_BL_EXT);
     open_da_files(g);
-		rewind_da_files(g);   // set file pointers at the beginning of each DA
-	}
+    rewind_da_files(g);   // set file pointers at the beginning of each DA
+  }
 
   // mmap merge values so we can read/write simultaneously 
   int fd = open(g->merge_fname,O_RDWR);
@@ -362,14 +362,14 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     assert(currentColor < g->numBwt);
     // if requested output merge array
     if(g->outputDA && lastRound){ 
-			int da_value=0;
-			int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
+      int da_value=0;
+      int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
       if(e!=1) die(__func__);
       //if(fputc(currentColor, daOutFile)==EOF)
       if(fwrite(&da_value, g->outputDA, 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   
-			//printf("%d ==> %d\n", currentColor, da_value);
-		}	
+      //printf("%d ==> %d\n", currentColor, da_value);
+    } 
     // save new BWT char overwriting mergeColor[i]
     int e = fread(bwtout+i,sizeof(symbol),1,g->bwf[currentColor]);
     if(e!=1) die(__func__);
@@ -377,7 +377,8 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     g->inCnt[currentColor]++; // one more char read from currentColor BWT
   }  
   close_bw_files(g);
-  close_da_files(g);
+  if(g->outputDA)
+    close_da_files(g);
   // final check on the merging 
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
 
@@ -393,8 +394,8 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   // close document array file 
   if(g->outputDA && lastRound){
     if(fclose(daOutFile)!=0) die("mergeBWT128ext: Error closing Document Array file");   
-	  remove(g->dafname);
-	}
+    remove(g->dafname);
+  }
 }
 
 
@@ -483,7 +484,7 @@ void mergeBWT8(g_data *g, bool lastRound)
       if(fwrite(&da_value, g->outputDA, 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   
       //printf("%d ==> %d\n", currentColor, da_value);
-		}	
+    } 
     // save new BWT char overwriting mergeColor[i]
     if(g->extMem) {
       int e = fread(bwtout+i,sizeof(symbol),1,g->bwf[currentColor]);

@@ -131,7 +131,7 @@ typedef struct {
   bool lcpCompute;         // compute LCP from scratch
   bool mwXMerge;           // use external multiway mergesort when computing LCP from scratch
   int dbOrder;             // if > 1 output info useful for order-k dbGraph construction (only with -A 128) 
-  int outputDA;            // output Merge array (=Document Array) for last iteration
+  int outputDA;            // if > 0 output Merge array (=Document Array) for last iteration using outputDA bytes per symbol
   FILE *unsortedLcp;       // if !NULL file containing unsorted LCP values
   FILE *unsortedLcp_size;  // if !NULL file containing the size of sorted blocks in unsorted_Lcp
   bool smallAlpha;         // the alphabet is small

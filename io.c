@@ -179,7 +179,7 @@ void bitfile_flush(bitfile *b)
 }
 
 // init a bitfile: opening file and filling it with size zero bits
-// if temp==true the file is anonymous and imemdiately deleted, otherwise 
+// if temp==true the file is anonymous and immediately deleted, otherwise 
 // the file has .bitfile extension and maintained after the end of the computation   
 void bitfile_create(bitfile *b, size_t size, char *path, bool temp) {
   // create local copy of template

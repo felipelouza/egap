@@ -279,6 +279,13 @@ void gap128ext(g_data *g, bool lastRound) {
     close_unsortedLCP_files(g);
     if(g->verbose>0) printf("Remind to run lcpmerge to obtain the final LCP array\n"); 
   }
+  // if dbOrder>1 rename BWT file, since it is a partially ordered BWT
+  if(g->dbOrder>1) {
+    char tmp1[Filename_size];
+    snprintf(tmp1,Filename_size,"%s.%d.%s",g->outPath,g->dbOrder, BWT_EXT);
+    if(rename(g->bwfname,tmp1)!=0)
+      die("Cannot rename BWT file");
+  }
 
   free(g->F); // last five arrays deallocated
   free(g->firstColumn); 

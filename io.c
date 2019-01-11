@@ -22,7 +22,7 @@ void rewind_bw_files(g_data *g) {
   }
 }
 
-// use bws[] to make bwf[i] point at the beginning of bws[i]  
+// close the files bwf[i]  
 void close_bw_files(g_data *g) {
   assert(g->extMem);
   for(int i=0; i< g->numBwt; i++) {
@@ -45,7 +45,7 @@ void open_da_files(g_data *g) {
   }
 }
 
-// use bws[] to make bwf[i] point at the beginning of bws[i]  
+// use bws[] to make daf[i] point at the beginning of da[i]  
 void rewind_da_files(g_data *g) {
   assert(g->extMem);
   for(int i=0; i< g->numBwt; i++) {
@@ -54,7 +54,7 @@ void rewind_da_files(g_data *g) {
   }
 }
 
-// use bws[] to make bwf[i] point at the beginning of bws[i]  
+// close daf[i] files  
 void close_da_files(g_data *g) {
   assert(g->extMem);
   for(int i=0; i< g->numBwt; i++) {

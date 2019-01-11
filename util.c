@@ -22,10 +22,9 @@ void array_clear(customInt* array, customInt size, customInt v) {
  *   bwtLen[]
  *   bws[]
  * 
- * return true
- * 
- * (old version: Return false if the processing was not started since
- * there is a single sequence and there are not LCP values to compute)   
+ * Return false if the processing was not started since there is a single
+ * multiBWT and there are not LCP or DB info values to compute (ie there
+ * is nothing to do), otherwise return true   
  * */
 bool readBWTsingle(char *path, g_data *g)
 {
@@ -51,21 +50,22 @@ bool readBWTsingle(char *path, g_data *g)
   g->numBwt = flen/8;
   assert(g->numBwt>0);
 
-  if(g->numBwt==1 && g->outputDA && !g->lcpCompute) {
+  if(g->numBwt==1 && g->outputDA) { // if there is a single (multi)-bwt the DA does not change
     char tmp1[Filename_size];
     char tmp2[Filename_size];
     snprintf(tmp1,Filename_size,"%s.%d.%s",path,g->outputDA, DA_BL_EXT);
     snprintf(tmp2,Filename_size,"%s.%d.%s",path,g->outputDA, DA_EXT);
-    rename(tmp1,tmp2);
+    if(rename(tmp1,tmp2)!=0)
+      die("Cannot rename DA file");
   }
 
-  #if 0
-  if(g->numBwt==1 && !g->lcpCompute) {
+  // single BWT with no lcp or dbInfo computation: nothing to do
+  if(g->numBwt==1 && !g->lcpCompute && g->dbOrder==0) {
     fclose(f);
     return false;
   }
-  #endif
-  // now we have the correct number of (multi)BWTs: allocate g->bwtLen and g->bws  
+
+  // we have the number of (multi)BWTs: allocate g->bwtLen and g->bws  
   g->bwtLen = (customInt *) malloc (g->numBwt * sizeof(customInt));
   g->bws = (symbol **) malloc (g->numBwt * sizeof(symbol *));
   if(!g->bwtLen || !g->bws) die(__func__);
@@ -118,7 +118,6 @@ bool readBWTsingle(char *path, g_data *g)
   }
   return true;
 }
-
 
 void array_copy(customInt *dest, customInt *src, customInt size){
   for (customInt i = 0; i < size; ++i) {

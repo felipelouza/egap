@@ -129,6 +129,10 @@ int main(int argc, char *argv[]) {
       printf("Option -D forces option -A 128\n");
       g.algorithm = 128;
     }
+    if(g.lcpMerge || g.lcpCompute) {
+      printf("Option -D incompatible with computing or merging lcp values\n");
+      exit(EXIT_FAILURE);
+    }
   }
   if(num_threads <0) {
     printf("Invalid number of threads, must be non negative\n");
@@ -155,7 +159,7 @@ int main(int argc, char *argv[]) {
       printf("You cannot run H&M in external memory\n");
       exit(EXIT_FAILURE);
     }
-    if(g.mmapBWT) {
+    if(g.mmapBWT) { // extMem reads from the input bwt files from disk, it does not mmap them
       printf("Option -E incompatible with -T\n");
       exit(EXIT_FAILURE);
     }
@@ -203,7 +207,7 @@ int main(int argc, char *argv[]) {
   bool something_to_do = readBWTsingle(path, &g);
   
   if(!something_to_do) {
-    puts("Single BWT in input and no LCP computation. I have nothing to do!"); 
+    puts("Single BWT in input and no LCP/dBG computation. I have nothing to do!"); 
     g.mergeLen = g.sizeOfAlpha = 1;
   }
   else {
@@ -230,7 +234,7 @@ int main(int argc, char *argv[]) {
     // if lcpCompute the result is already in the outputfile or in the pair files 
     // and a message is printed to run mergelcp 
   
-    // write content of g.bws[0] to output file (if necessary) and free/munmap it 
+    // write content of g.bws[0] to output file (if necessary) and/or free/munmap it 
     if(g.mmapBWT) {
       int e = munmap(g.bws[0],g.mergeLen*sizeof(symbol));
       if(e) die("main (unmap bws)");

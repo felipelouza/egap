@@ -83,7 +83,8 @@ return 0;
 
 int file_write_array(FILE* f_out, int_t *A, int_t n, ssize_t size){
 
-  fwrite(A, size, n, f_out);
+  int_t i;
+  for(i=0; i<n; i++) fwrite(A+i, size, 1, f_out);
 
 return 1;
 }

@@ -181,12 +181,11 @@ void bitfile_flush(bitfile *b)
 // init a bitfile: opening file and filling it with size zero bits
 // if temp==true the file is anonymous and immediately deleted, otherwise 
 // the file has .bitfile extension and maintained after the end of the computation   
-void bitfile_create(bitfile *b, size_t size, char *path, bool temp) {
+void bitfile_create(bitfile *b, size_t size, char *path, int order) {
   // create local copy of template
-  char s[strlen(path)+11];
-  if(temp) { // if this is a temp file create unique name 
+  char s[Filename_size];
+  if(order==0) { // if this is a temp file create unique name 
     sprintf(s,"%s.bitXXXXXX",path);
-    assert(strlen(s)==strlen(path) + 10);
     // get file descriptor for tmp file fill it with 0s and delete file  
     b->fd = mkstemp(s);
     if(b->fd == -1) die("bitfile_create: Tempfile creation failed");
@@ -196,11 +195,10 @@ void bitfile_create(bitfile *b, size_t size, char *path, bool temp) {
     if(e!=0)        die("bitfile_create: Tempfile unlink failed");
     }
   else { // we keep this file (to compute the DB-graph) 
-    sprintf(s,"%s.bitfile1",path);
-    assert(strlen(s)==strlen(path) + 9);
+    sprintf(s,"%s.%d.lcpbit1",path,order);
     // get file descriptor for bitfile fill it with 0s  
     b->fd = open(s,O_RDWR|O_CREAT|O_TRUNC, 0666);
-    if(b->fd == -1) die("bitfile_create: bitfileq creation failed");
+    if(b->fd == -1) die("bitfile_create: bitfile creation failed");
     int e = ftruncate(b->fd,(size+7)/8); // fill with size 0 bits
     if(e!=0)        die("bitfile_create: bitfile ftruncate failed");
   }
@@ -281,12 +279,12 @@ off_t bitfile_tell(bitfile *b) {
 
 // save hi bit of name to bitfile0
 // used for extracting info for dbGraph
-void extract_bitfile(char *name, size_t size, char *outpath)  
+void extract_bitfile(char *name, size_t size, char *outpath, int order)  
 {
   FILE *f = fopen(name,"rb");
   if(f==NULL) die("extract_bitfile: unable to open input file");
-  char s[strlen(outpath) + 10];
-  sprintf(s,"%s.bitfile0",outpath);
+  char s[Filename_size];
+  sprintf(s,"%s.%d.lcpbit0",outpath,order);
   assert(strlen(s)==strlen(outpath) + 9);
   FILE *g = fopen(s,"wb");
   if(f==NULL) die("extract_bitfile: unable to open output file");

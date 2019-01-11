@@ -135,7 +135,7 @@ typedef struct {
   FILE *unsortedLcp;       // if !NULL file containing unsorted LCP values
   FILE *unsortedLcp_size;  // if !NULL file containing the size of sorted blocks in unsorted_Lcp
   bool smallAlpha;         // the alphabet is small
-  int extMem;              // run in external memory: if ==1 only keep BWTs in external memory 
+  bool extMem;             // if true run in external memory
   int algorithm;           // preferred algorithm to use: gap8 gap16 gap128 gap256, if!=8,16,128,256 then use gap  
   bool mmapZ;              // mmap Z arrays
   bool mmapB;              // mmap B array

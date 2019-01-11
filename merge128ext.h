@@ -205,8 +205,7 @@ void gap128ext(g_data *g, bool lastRound) {
   open_bw_files(g);
   // create 0 initialized bitfile (reading and writing using bitfile_* functions)
   bitfile b;
-  if(g->dbOrder>1) bitfile_create(&b,g->mergeLen,g->outPath,false);
-  else bitfile_create(&b,g->mergeLen,g->outPath,true);
+  bitfile_create(&b,g->mergeLen,g->outPath,g->dbOrder);
   // allocate Z (merge) Znew (reading only Z, writing only newZ) 
   alloc_merge_arrays(g);
   
@@ -248,7 +247,7 @@ void gap128ext(g_data *g, bool lastRound) {
     // update solid block files:
     rewind(ibList->fout);
     ibList->fin = ibList->fout;
-  } while(!merge_completed && (prefixLength!=g->dbOrder+1));  // end main loop
+  } while(!merge_completed && (prefixLength!=g->dbOrder));  // end main loop
   if(ibList->fin!=NULL) fclose(ibList->fin);
 
   if (g->verbose>0) {
@@ -270,7 +269,7 @@ void gap128ext(g_data *g, bool lastRound) {
   
   // for dbGraph info we need to extract the hi bit from the merge arrray
   if(g->dbOrder>1) 
-    extract_bitfile(g->merge_fname, g->mergeLen, g->outPath);
+    extract_bitfile(g->merge_fname, g->mergeLen, g->outPath, g->dbOrder);
   
   // computation complete, do the merging. 
   // The following call writes the merged BWT back to file g->bwfname

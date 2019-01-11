@@ -331,7 +331,6 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   if(sizeof(symbol)>sizeof(palette)) die("Sorry, alphabet is too large (mergeBWT128ext");
   assert(!g->lcpMerge && g->extMem && g->numBwt<=128);
   FILE *daOutFile=NULL;
-
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
   if(g->outputDA && lastRound)
@@ -377,8 +376,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     g->inCnt[currentColor]++; // one more char read from currentColor BWT
   }  
   close_bw_files(g);
-  if(g->outputDA)
-    close_da_files(g);
+  if(g->outputDA  && lastRound) close_da_files(g);
   // final check on the merging 
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
 

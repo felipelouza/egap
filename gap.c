@@ -61,8 +61,8 @@ int main(int argc, char *argv[]) {
   bool hm = false;
   g.unsortedLcp = NULL;
   g.outPath = NULL;
-  g.extMem = g.algorithm = 0;
-  g.smallAlpha=g.mmapZ=g.mmapBWT=g.mmapB= g.lcpMerge = g.lcpCompute = false;
+  g.algorithm = 0;
+  g.extMem = g.smallAlpha=g.mmapZ=g.mmapBWT=g.mmapB= g.lcpMerge = g.lcpCompute = false;
   g.outputDA = 0;
   g.dbOrder = 0;           // order for deBruijn graph 
   int num_threads = 0;
@@ -103,8 +103,7 @@ int main(int argc, char *argv[]) {
         num_threads = atoi(optarg);     // number of consumer threads 
         break;       
       case 'E':
-        g.extMem++; 
-        break;                    // use external memory (see mergegap.c)
+        g.extMem=true; break;           // use external memory (see mergegap.c)
       case 'Z':
         g.mmapZ=true; break;      // mmap merge and newmerge
       case 'B':
@@ -116,6 +115,20 @@ int main(int argc, char *argv[]) {
         usage(argv[0],&g);
         exit(EXIT_FAILURE);
       }
+  }
+  if(g.dbOrder<0 || g.dbOrder==1) { // illegal order
+    printf("dbOrder must be al least 2\n");
+    exit(EXIT_FAILURE);
+  }
+  if(g.dbOrder>1) { // valid order !=0
+    if(!g.extMem) {
+      printf("Option -D forces option -E\n");
+      g.extMem = true;
+    }
+    if(g.algorithm!=128) {
+      printf("Option -D forces option -A 128\n");
+      g.algorithm = 128;
+    }
   }
   if(num_threads <0) {
     printf("Invalid number of threads, must be non negative\n");

@@ -9,6 +9,10 @@ void open_bw_files(g_data *g);
 void rewind_bw_files(g_data *g);
 void close_bw_files(g_data *g);
 
+void open_sa_files(g_data *g);
+void rewind_sa_files(g_data *g);
+void close_sa_files(g_data *g);
+
 void open_da_files(g_data *g);
 void rewind_da_files(g_data *g);
 void close_da_files(g_data *g);

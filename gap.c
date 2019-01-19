@@ -64,9 +64,10 @@ int main(int argc, char *argv[]) {
   g.algorithm = 0;
   g.extMem = g.smallAlpha=g.mmapZ=g.mmapBWT=g.mmapB= g.lcpMerge = g.lcpCompute = false;
   g.outputDA = 0;
+  g.outputSA = 0;
   g.dbOrder = 0;           // order for deBruijn graph 
   int num_threads = 0;
-  while ((c=getopt(argc, argv, "vhalrxmd:p:g:A:s:o:EZTBD:")) != -1) {
+  while ((c=getopt(argc, argv, "vhalrxmd:p:g:A:s:o:EZTBD:S:")) != -1) {
     switch (c) 
       {
       case 'v':
@@ -83,6 +84,8 @@ int main(int argc, char *argv[]) {
         g.mwXMerge=false; break;      // do not use external multiway merge sort for computing lcp values
       case 'd':
         g.outputDA = atoi(optarg); break;  // output Document Array (for last iteration only) 
+      case 'S':
+        g.outputSA = atoi(optarg); break;  // output Suffix Array (for last iteration only) 
       case 'm':
         hm=true; break;                 // use hm algorithm 
       case 'a':

@@ -105,6 +105,8 @@ typedef uint32_t palette;
 #define HM_BWT_EXT "bwtHM"
 #define DA_EXT "da"
 #define DA_BL_EXT "da_bl"
+#define SA_EXT "sa"
+#define SA_BL_EXT "sa_bl"
 
 // structure for writing in a segment of a newMergeColor
 typedef struct{
@@ -132,6 +134,7 @@ typedef struct {
   bool mwXMerge;           // use external multiway mergesort when computing LCP from scratch
   int dbOrder;             // if > 1 output info useful for order-k dbGraph construction (only with -A 128) 
   int outputDA;            // if > 0 output Merge array (=Document Array) for last iteration using outputDA bytes per symbol
+  int outputSA;            // if > 0 output Merge array (=Suffix Array) for last iteration using outputSA bytes per symbol
   FILE *unsortedLcp;       // if !NULL file containing unsorted LCP values
   FILE *unsortedLcp_size;  // if !NULL file containing the size of sorted blocks in unsorted_Lcp
   bool smallAlpha;         // the alphabet is small
@@ -152,8 +155,10 @@ typedef struct {
   // external memory access 
   char bwfname[Filename_size];   // filename of the input bwt file 
   char dafname[Filename_size];   // filename of the input DA file 
+  char safname[Filename_size];   // filename of the input SA file 
   FILE **bwf;              // bwf[0] ... bwf[numBwt-1] are pointer inside the input bwt file  
   FILE **daf;              // daf[0] ... daf[numBwt-1] are pointer inside the input DA file  
+  FILE **saf;              // saf[0] ... saf[numBwt-1] are pointer inside the input SA file  
   FILE *fmergeColor;       // mergecolor file   
   cwriter *fnewMergeColor; // newmergecolor files (one per symbol) 
   char *merge_fname;       // name of merge file

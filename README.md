@@ -35,7 +35,7 @@ This will produce the file `dataset/reads.fastq.bwt` and `dataset/reads.fastq.2.
 
 ## Description
 
-Tool to build the BWT and optionally the LCP and DA array for a collection  of sequences in external memory. There are two different usages depending on whether you already have the BWT of the input files:
+Tool to build the **BWT** and optionally the **LCP, DA and SA array** for a collection  of sequences in external memory. There are two different usages depending on whether you already have the BWT of the input files:
 
 * If you do have the BWTs use option -b: you must specify the file names on the command line  and use the option -o to specify an output basename. 
 For example:
@@ -67,6 +67,9 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 *-d, --da*          
   compute Document Array
   
+*-s, --sa*          
+  compute Suffix Array
+  
 *-b, --bwt*          
   inputs are bwt files (requires -o)
 
@@ -78,6 +81,9 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 
 *--dbytes*      
   number of bytes for each DA entry (def. 4)
+
+*--sbytes*      
+  number of bytes for each SA entry (def. 4)
 
 *--rev*      
   compute data structures for the reversed string  

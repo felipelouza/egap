@@ -35,6 +35,38 @@ void close_bw_files(g_data *g) {
 /******************************************************************************/
 
 // open a file for each input BWT, file pointers are stored to bwf[] 
+void open_sa_files(g_data *g) {
+  assert(g->extMem);
+  g->saf = malloc(g->numBwt*sizeof(FILE *));
+  if(g->saf==NULL) die(__func__);
+  for(int i=0; i< g->numBwt; i++) {
+    g->saf[i] = fopen(g->safname,"r");
+    if(!g->saf[i]) die(__func__);
+  }
+}
+
+// use bws[] to make saf[i] point at the beginning of da[i]  
+void rewind_sa_files(g_data *g) {
+  assert(g->extMem);
+  for(int i=0; i< g->numBwt; i++) {
+    int e = fseek(g->saf[i],(g->outputSA)*(g->bws[i]-g->bws[0]+g->symb_offset),SEEK_SET);
+    if(e!=0) die(__func__);
+  }
+}
+
+// close saf[i] files  
+void close_sa_files(g_data *g) {
+  assert(g->extMem);
+  for(int i=0; i< g->numBwt; i++) {
+    int e = fclose(g->saf[i]);
+    if(e!=0) die(__func__);
+  }
+  free(g->saf);
+}
+
+/******************************************************************************/
+
+// open a file for each input BWT, file pointers are stored to bwf[] 
 void open_da_files(g_data *g) {
   assert(g->extMem);
   g->daf = malloc(g->numBwt*sizeof(FILE *));

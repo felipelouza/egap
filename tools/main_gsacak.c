@@ -70,13 +70,13 @@ int main(int argc, char** argv){
   char *c_file=NULL, *outfile=NULL;
   size_t RAM=0;
 
-  while ((c=getopt(argc, argv, "cslvXbrg:hm:o:Rd:")) != -1) {
+  while ((c=getopt(argc, argv, "cs:lvXbrg:hm:o:Rd:")) != -1) {
     switch (c) 
       {
       case 'c':
         VALIDATE=1; break;          // validate output
       case 's':
-        OutputSA=1; break;            // output SA possibly combined with LCP
+        OutputSA=atoi(optarg); break;   // output SA 
       case 'l':
         LCP_COMPUTE=1;  break;      // compute LCP 
       case 'v':
@@ -160,6 +160,7 @@ int main(int argc, char** argv){
   FILE* f_in = file_open(c_file, "rb");
   if(!f_in) return 0;
 
+
   //number of chunks
   int_t chunks = 0;
   //pos[i] stores the position of chunk C_i in the file
@@ -184,7 +185,7 @@ int main(int argc, char** argv){
   }
 
   // files used for multi BWT, LCP and their lengths 
-  FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL, *f_da = NULL;
+  FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL, *f_da = NULL, *f_sa = NULL;
   FILE *f_size = NULL; //size of each chunk
 
   if(Extract>1){
@@ -214,6 +215,12 @@ int main(int argc, char** argv){
     char s[500]; 
     snprintf(s,500,"%s.%d.da_bl",outfile,OutputDA); 
     f_da = file_open(s, "wb");
+  }
+
+  if(OutputSA) {
+    char s[500]; 
+    snprintf(s,500,"%s.%d.sa_bl",outfile,OutputSA); 
+    f_sa = file_open(s, "wb");
   }
 
 	size_t curr=0;
@@ -356,9 +363,14 @@ int main(int argc, char** argv){
 
     // output DA alone
     if(DA_COMPUTE){
-			//printf("%d\t%zu\t%d\t k = %d\n", len, sum*sizeof(int), curr, K[bl]);
       for(i=0; i<len; i++) DA[i]+=curr;
       file_write_array(f_da, DA+1, len-1, OutputDA);//ignore the first DA-value
+    }
+
+    // output SA alone
+    if(OutputSA){
+      for(i=0; i<len; i++) SA[i]+=sum;
+      file_write_array(f_sa, SA+1, len-1, OutputSA);//ignore the first SA-value
     }
 
     if(Verbose>2) {
@@ -377,6 +389,7 @@ int main(int argc, char** argv){
     }
   
     // output SA alone or SA&LCP together
+    /*
     if(OutputSA){
       char tmp[500]; 
       if(LCP_COMPUTE) snprintf(tmp,500,"%" PRIdN ".sa_lcp",bl);
@@ -385,6 +398,7 @@ int main(int argc, char** argv){
       if(LCP_COMPUTE) lcp_array_write(SA, LCP, len, outfile, tmp);
       else suffix_array_write(SA, len, outfile, "sa");
     }
+    */
 
     if(OutputGapLcp){
       uint64_t c; int_t i;
@@ -434,6 +448,10 @@ int main(int argc, char** argv){
 
   if(DA_COMPUTE){
     fclose(f_da);
+  }
+
+  if(OutputSA){
+    fclose(f_sa);
   }
 
   return 0;

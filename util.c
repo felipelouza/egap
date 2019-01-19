@@ -50,6 +50,14 @@ bool readBWTsingle(char *path, g_data *g)
   g->numBwt = flen/8;
   assert(g->numBwt>0);
 
+  if(g->numBwt==1 && g->outputSA) { // if there is a single (multi)-bwt the DA does not change
+    char tmp1[Filename_size];
+    char tmp2[Filename_size];
+    snprintf(tmp1,Filename_size,"%s.%d.%s",path,g->outputSA, SA_BL_EXT);
+    snprintf(tmp2,Filename_size,"%s.%d.%s",path,g->outputSA, SA_EXT);
+    if(rename(tmp1,tmp2)!=0)
+      die("Cannot rename SA file");
+  }
   if(g->numBwt==1 && g->outputDA) { // if there is a single (multi)-bwt the DA does not change
     char tmp1[Filename_size];
     char tmp2[Filename_size];
@@ -241,6 +249,18 @@ static FILE *openDAFile(g_data *g)
   return f;
 }
 
+static FILE *openSAFile(g_data *g)
+{
+  char filename[Filename_size];
+
+  if(g->verbose>1) puts("Writing Suffix Array");
+  assert(g->outputSA);
+  snprintf(filename,Filename_size,"%s.%d.%s",g->outPath,g->outputSA,SA_EXT);
+  FILE *f = fopen(filename,"wb");
+  if(f==NULL) die("Error opening Suffix array file");
+  return f;
+}
+
 // use g->mergeColor to merge bwt (and LCP) values 
 // used by gap gap16 and hm
 void mergeBWTandLCP(g_data *g, bool lastRound)
@@ -251,9 +271,8 @@ void mergeBWTandLCP(g_data *g, bool lastRound)
 
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
-  if(g->outputDA && lastRound){
+  if(g->outputDA && lastRound)
     daOutFile = openDAFile(g);
-  }
   if(g->extMem) {
     open_bw_files(g);// open files in read mode
     rewind_bw_files(g);   // set file pointers at the beginning of each BWT
@@ -330,14 +349,22 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   if(sizeof(symbol)>sizeof(palette)) die("Sorry, alphabet is too large (mergeBWT128ext");
   assert(!g->lcpMerge && g->extMem && g->numBwt<=128);
   FILE *daOutFile=NULL;
+  FILE *saOutFile=NULL;
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
+  if(g->outputSA && lastRound)
+    saOutFile = openSAFile(g);
   if(g->outputDA && lastRound)
     daOutFile = openDAFile(g);  
 
   open_bw_files(g);     // open files in read mode
   rewind_bw_files(g);   // set file pointers at the beginning of each BWT
 
+  if(g->outputSA && lastRound){
+    snprintf(g->safname,Filename_size,"%s.%d.%s",g->outPath,g->outputSA, SA_BL_EXT);
+    open_sa_files(g);
+    rewind_sa_files(g);   // set file pointers at the beginning of each SA
+  }
   if(g->outputDA && lastRound){
     snprintf(g->dafname,Filename_size,"%s.%d.%s",g->outPath,g->outputDA, DA_BL_EXT);
     open_da_files(g);
@@ -359,6 +386,13 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     int currentColor = g->mergeColor[i] & 0x7F; // delete additional bit
     assert(currentColor < g->numBwt);
     // if requested output merge array
+    if(g->outputSA && lastRound){ 
+      int sa_value=0;
+      int e = fread(&sa_value, g->outputSA, 1, g->saf[currentColor]);
+      if(e!=1) die(__func__);
+      if(fwrite(&sa_value, g->outputSA, 1, saOutFile)==EOF)
+        die("mergeBWT128ext: Error writing to Suffix Array file");   
+    } 
     if(g->outputDA && lastRound){ 
       int da_value=0;
       int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
@@ -375,6 +409,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     g->inCnt[currentColor]++; // one more char read from currentColor BWT
   }  
   close_bw_files(g);
+  if(g->outputSA  && lastRound) close_sa_files(g);
   if(g->outputDA  && lastRound) close_da_files(g);
   // final check on the merging 
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
@@ -388,6 +423,11 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   fd = munmap(g->mergeColor,g->mergeLen*sizeof(palette));
   if(fd == -1) die(__func__);
   g->mergeColor=NULL;  
+  // close suffix array file 
+  if(g->outputSA && lastRound){
+    if(fclose(saOutFile)!=0) die("mergeBWT128ext: Error closing Suffix Array file");   
+    remove(g->safname);
+  }
   // close document array file 
   if(g->outputDA && lastRound){
     if(fclose(daOutFile)!=0) die("mergeBWT128ext: Error closing Document Array file");   
@@ -450,16 +490,22 @@ void mergeBWT8(g_data *g, bool lastRound)
   symbol *bwtout = (symbol *) g->mergeColor;   // merged BWT stored in mergeColor
   assert(!g->lcpMerge);
   FILE *daOutFile=NULL;
+  FILE *saOutFile=NULL;
 
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0); // clear counter inside each bwt
+  if(g->outputSA && lastRound){
+    saOutFile = openSAFile(g);    
+    snprintf(g->safname,Filename_size,"%s.%d.%s",g->outPath,g->outputSA, SA_BL_EXT);
+    open_sa_files(g);
+    rewind_sa_files(g);   // set file pointers at the beginning of each DA
+  }
   if(g->outputDA && lastRound){
     daOutFile = openDAFile(g);    
     snprintf(g->dafname,Filename_size,"%s.%d.%s",g->outPath,g->outputDA, DA_BL_EXT);
     open_da_files(g);
     rewind_da_files(g);   // set file pointers at the beginning of each DA
   }
-
   if(g->extMem) {
     open_bw_files(g);     // open files in read/write mode
     rewind_bw_files(g);   // set file pointers at the beginning of each BWT 
@@ -473,6 +519,13 @@ void mergeBWT8(g_data *g, bool lastRound)
     if(g->lcpCompute && lastRound)
       assert( ((g->mergeColor[i]>>2*shift) & 3)==3);    
     // if requested output merge array
+    if(g->outputSA && lastRound){ 
+      int sa_value=0;
+      int e = fread(&sa_value, g->outputSA, 1, g->saf[currentColor]);
+      if(e!=1) die(__func__);
+      if(fwrite(&sa_value, g->outputSA, 1, saOutFile)==EOF)
+        die("mergeBWT128ext: Error writing to Sufix Array file");   
+    } 
     if(g->outputDA && lastRound){ 
       int da_value=0;
       int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
@@ -494,6 +547,11 @@ void mergeBWT8(g_data *g, bool lastRound)
   // final check on the merging 
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
   if(g->extMem) close_bw_files(g);
+  // close document array file 
+  if(g->outputSA && lastRound){
+    if(fclose(saOutFile)!=0) die("mergeBWT8: Error closing Suffix Array file");       
+    remove(g->safname);
+  }
   // close document array file 
   if(g->outputDA && lastRound){
     if(fclose(daOutFile)!=0) die("mergeBWT8: Error closing Document Array file");       

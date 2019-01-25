@@ -132,8 +132,8 @@ int main(int argc, char *argv[]) {
       printf("Option -D forces option -A 128\n");
       g.algorithm = 128;
     }
-    if(g.lcpMerge || g.lcpCompute) {
-      printf("Option -D incompatible with computing or merging lcp values\n");
+    if(g.lcpMerge) {
+      printf("Option -D incompatible with merging lcp values\n");
       exit(EXIT_FAILURE);
     }
   }

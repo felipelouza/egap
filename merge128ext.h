@@ -12,7 +12,7 @@
  *   we have: #occ(j) in bwt[0], #occ(j) in bwt(1), and so on
  * Since the region corresponding to 0 does not change and 0 has a 
  * special update rule, we init that region also in Znew (newMergeColor)
- * and we never modify thet region in the algorithm.   
+ * and we never modify that region in the algorithm.   
  * The array firstColumn (compact representation of F) is also initialized
  *  
  * Note, that since we are computing only the  WT instead of B we use a 

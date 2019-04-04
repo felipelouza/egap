@@ -62,6 +62,7 @@ def main():
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
   parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
   parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
+  parser.add_argument('-k', '--k', help='compute k-truncated LCP array', default=0, type=int)
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
@@ -238,12 +239,15 @@ def phase2(args,logfile, logfile_name):
   if(bwt_size > args.mem*1024*1024):
     # input larger than assigned ram: external algorithm 
     options = "-A128 -g128 -vaE"
+    mode = "external memory"
   elif 3 * bwt_size >  args.mem*1024*1024:
     # input fits in ram but not too small: semi-external algorithm
     options = "-A8 -g8 -vaE"
+    mode = "semi-external memory"
   else:
     # input 3 times smaller than assigned ram: internal algorithm 
     options = "-g256 -vaT"
+    mode = "internal memory"
   exe = os.path.join(args.egap_dir,gap_exe)
   if(args.v): options += "v"    # increase verbosity level
   if(args.lcp): options += "l"  # generate lcp
@@ -251,7 +255,7 @@ def phase2(args,logfile, logfile_name):
   if(args.sa): options += "S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
               byts = args.lbytes, opts=options, ibase=args.basename)
-  print("==== gap\n Command:", command)
+  print("==== gap ({alg})\n Command: {cmd}".format(alg=mode, cmd=command))
   return execute_command(command,logfile,logfile_name)
 
 
@@ -259,8 +263,8 @@ def phase2(args,logfile, logfile_name):
 # merging of LCP values
 def phase3(args,logfile, logfile_name):
   exe = os.path.join(args.egap_dir,mergelcp_exe)
-  command = "{exe} -k 256 {ibase} {pos} {lcp} -t -v -m {mem} ".format(exe=exe, 
-              mem=args.mem, ibase=args.basename, pos=POS_SIZE,lcp=args.lbytes)
+  command = "{exe} -s 256 {ibase} {pos} {lcp} -t -v -m {mem} -k {k} ".format(exe=exe, 
+              mem=args.mem, ibase=args.basename, pos=POS_SIZE, lcp=args.lbytes, k=args.k)
   print("==== mergeLcp\n Command:", command)
   return execute_command(command,logfile,logfile_name)
   

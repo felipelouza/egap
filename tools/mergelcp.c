@@ -39,7 +39,7 @@ return f_in;
 
 /**********************************************************************/
 
-int heap_sort_level(heap *h, FILE *f_lcp, size_t *sum, char* c_file, int level){
+int heap_sort_level(heap *h, FILE *f_lcp, size_t *sum, char* c_file, int level, int k){
   
   #if CHECK == 2
     char c_pos[PATH_MAX];
@@ -50,20 +50,32 @@ int heap_sort_level(heap *h, FILE *f_lcp, size_t *sum, char* c_file, int level){
     }
   #endif
   
-  #if CHECK == 1
-    uint64_t curr=0;
-  #endif
-  
   #if DEBUG
     printf("**\n");
   #endif
   
   //pair sentinel; sentinel.pos=I_MAX; sentinel.lcp=I_MAX;
   pair sentinel; sentinel=MAX_KEY; //sentinel.lcp=I_MAX;
-    
+  int64_t pos, curr=0;
+
   while(key(0)!=sentinel){
   
     pair tmp = heap_delete_min(h);
+  
+    //complete LCP empty entries
+    /**/
+    if(level==0){
+      pos=pos(tmp);
+      pair aux=lcp(k); //k-truncated LCP-values
+      for(;curr<pos-1;curr++){
+        fprintf(stderr,"%lu, %lu (lcp = %lu)\n", pos, curr, lcp(aux));
+        heap_write(h, f_lcp, aux, level);
+        (*sum)++;
+      }
+      curr=pos;
+    }
+    /**/
+
     heap_write(h, f_lcp, tmp, level);
     (*sum)++;
     #if CHECK == 2
@@ -114,8 +126,9 @@ void usage(char *name){
   puts("Output:\tFILE.lcp contains <lcp> sorted by <pos>.\n");
   puts("Available options:");
   puts("\t-h\tthis help message");
-  puts("\t-k\tHEAP_SIZE");
+  puts("\t-s\tHEAP_SIZE");
   puts("\t-t\ttime");
+  puts("\t-k\tk-truncated LCP merging");
   puts("\t-v\tverbose\n");
   exit(EXIT_FAILURE);
 }
@@ -132,11 +145,12 @@ int main(int argc, char **argv) {
   int heap_size=HEAP_SIZE;
   int pos_size=4, lcp_size=4;
   size_t RAM=0;
+  int k=0;
   
-  while ((c=getopt(argc, argv, "k:vthm:")) != -1) {
+  while ((c=getopt(argc, argv, "s:vthk:m:")) != -1) {
     switch (c)
     {
-      case 'k':
+      case 's':
         heap_size=atoi(optarg); break;  // compute LCP and output in Gap format 
       case 'v':
         verbose++; break;
@@ -144,6 +158,8 @@ int main(int argc, char **argv) {
         time++; break;
       case 'h':
         usage(argv[0]); break;       // show usage and stop
+      case 'k':
+        k=atoi(optarg); break;       // k-truncated LCP merging
       case 'm':
         RAM=(size_t)atoi(optarg)*MB; break;
       case '?':
@@ -171,7 +187,7 @@ int main(int argc, char **argv) {
   }
   
   if(heap_size<2){
-    puts("ERROR: k must be larger than 1");
+    puts("ERROR: s must be larger than 1");
     exit(EXIT_FAILURE);
   }
 
@@ -220,6 +236,11 @@ int main(int argc, char **argv) {
   heap *h;
   size_t size, seek=0;
   size_t sum;
+
+  f_size = fopen(c_size, "rb");//header file
+  size_t n;
+  fread(&n, sizeof(size_t), 1, f_size);
+  printf("n = %zu\n", n);
   
   //LEVEL 1 
   do{ // multilevel merging
@@ -231,7 +252,7 @@ int main(int argc, char **argv) {
     level++;
     h = heap_alloc(heap_size, c_lcp, level, pos_size, lcp_size, RAM);
     
-    f_size = fopen(c_size, "rb");//header file
+    //f_size = fopen(c_size, "rb");//header file
     
     //output
     sprintf(c_lcp_multi, "%s.pair.%d.lcp", c_file, level);  
@@ -251,7 +272,7 @@ int main(int argc, char **argv) {
       
       if(++i == heap_size){
             
-        heap_sort_level(h, f_lcp, &sum, c_file, level);     
+        heap_sort_level(h, f_lcp, &sum, c_file, level, k);     
         fwrite(&sum, sizeof(size_t), 1, f_size_multi);
       
         //new heap
@@ -275,7 +296,7 @@ int main(int argc, char **argv) {
         break;
       }
       
-      heap_sort_level(h, f_lcp, &sum, c_file, level);
+      heap_sort_level(h, f_lcp, &sum, c_file, level, k);
       fwrite(&sum, sizeof(size_t), 1, f_size_multi);    
     }
         
@@ -293,11 +314,11 @@ int main(int argc, char **argv) {
     //input for the next level
     sprintf(c_lcp, "%s.pair.%d.lcp", c_file, level);
     sprintf(c_size, "%s.size.%d.lcp", c_file, level);
+
+    f_size = fopen(c_size, "rb");//header file
   }
   while(blocks>heap_size);
   
-  level = 0;
-
   if(onelevel){
     if(verbose)
       printf("%zux%d+%zu\t\n", blocks-1, heap_size, i);
@@ -320,7 +341,7 @@ int main(int argc, char **argv) {
     
     f_size = file_open(c_size_multi, "rb");//header file
 
-    h = heap_alloc(blocks, c_lcp_multi, level, pos_size, lcp_size, RAM);
+    h = heap_alloc(blocks, c_lcp_multi, 0, pos_size, lcp_size, RAM);
     seek=0;
     
     while(fread(&size, sizeof(size_t), 1, f_size)){
@@ -340,15 +361,27 @@ int main(int argc, char **argv) {
   size_t total=0;
   
   #if CHECK == 1
-    if(heap_sort_level(h, f_lcp, &total, c_file, level)) printf("isSorted!!\n");
+    if(heap_sort_level(h, f_lcp, &total, c_file, 0, k)) printf("isSorted!!\n");
     else printf("isNotSorted!!\n");
   #else
-    heap_sort_level(h, f_lcp, &total, c_file, level);
+    heap_sort_level(h, f_lcp, &total, c_file, 0, k);
   #endif
   
-  printf("%zu\n", total);
+  printf("N = %zu (%zu)\n", total, n);
+
+  //complete LCP empty entries
+  /**/
+  int64_t curr=total;
+  int64_t pos=n;
+
+  pair aux=lcp(k); //k-truncated LCP-values
+  for(;curr<pos-1;curr++){
+    fprintf(stderr,"%lu, %lu (lcp = %lu)\n", pos, curr, lcp(aux));
+    heap_write(h, f_lcp, aux, level);
+  }
+  /**/
   
-  heap_free(h, f_lcp, level);
+  heap_free(h, f_lcp, 0);
   fclose(f_lcp);
   
   /**/

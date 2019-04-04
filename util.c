@@ -162,6 +162,9 @@ void open_unsortedLCP_files(g_data *g)
   snprintf(filename,Filename_size,"%s.size.lcp",g->outPath);
   g->unsortedLcp_size = fopen(filename,"wb");
   if(g->unsortedLcp_size==NULL) {perror(filename); die(__func__);}
+  // write total size of the LCP array to first position of .size.lcp file 
+  size_t e = fwrite(&(g->mergeLen),sizeof(customInt),1,g->unsortedLcp_size);  
+  if(e!=1) die(__func__);
 }
 
 // write a lcp/position pair to g->unsortedLcp

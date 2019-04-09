@@ -62,7 +62,8 @@ def main():
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
   parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
   parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
-  parser.add_argument('-k', '--k', help='compute k-truncated LCP array', default=0, type=int)
+  parser.add_argument('-D', '--deB', help='compute info for order k deBruijn graph', default=0, type=int)
+  # parser.add_argument('-k', '--k', help='compute k-truncated LCP array', default=0, type=int)
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
@@ -194,6 +195,8 @@ def check_input(args):
 
 # phase1:
 # concatenation or computation of bwts 
+# this version never computes the LCPs: 
+# if required they are computed from scratch in phases 2 and 3
 def phase1(args,logfile, logfile_name):
   if args.bwt:
     print("==== creating .size file")    
@@ -253,6 +256,7 @@ def phase2(args,logfile, logfile_name):
   if(args.lcp): options += "l"  # generate lcp
   if(args.da): options += "d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
   if(args.sa): options += "S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
+  if(args.deB>0): options += " -D{k}".format(k = args.deB)      # info for order-k debrijin graph
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
               byts = args.lbytes, opts=options, ibase=args.basename)
   print("==== gap ({alg})\n Command: {cmd}".format(alg=mode, cmd=command))
@@ -264,7 +268,7 @@ def phase2(args,logfile, logfile_name):
 def phase3(args,logfile, logfile_name):
   exe = os.path.join(args.egap_dir,mergelcp_exe)
   command = "{exe} -s 256 {ibase} {pos} {lcp} -t -v -m {mem} -k {k} ".format(exe=exe, 
-              mem=args.mem, ibase=args.basename, pos=POS_SIZE, lcp=args.lbytes, k=args.k)
+              mem=args.mem, ibase=args.basename, pos=POS_SIZE, lcp=args.lbytes, k=args.deB)
   print("==== mergeLcp\n Command:", command)
   return execute_command(command,logfile,logfile_name)
   

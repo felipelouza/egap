@@ -56,10 +56,11 @@ static void init_arrays128ext(g_data *g)
 }
 
 
-// single iteration of the Gap algorithm
+// Single iteration of the Gap algorithm
 // input is head of the irrelevant lists (fin and fout) and an empty liquid block
 // return true if the whole sequence has become irrelevant.  
-
+// During this iteration we are discovering LCPs of length prefix_length-1
+// and writing to file LCPs of length prefix_length-2
 static bool addCharToPrefix128ext(solidBlockFile *solidHead, liquidBlock *liquid, uint32_t prefixLength, bitfile *b, g_data *g) {
   assert(liquid->empty);
   liquid->beginsAt = liquid->endsAt = 0;  
@@ -86,12 +87,12 @@ static bool addCharToPrefix128ext(solidBlockFile *solidHead, liquidBlock *liquid
     assert(last==NULL || last->nextBlock == next); // last is the immediately preceeding block
     // read newblock & color
     int currentColor = fread_color(g->fmergeColor);// read color and new block bit 
-    bool new_block = ((currentColor & 0x80)!=0);   // extract new block bit 
+    bool new_block = ((currentColor & 0x80)!=0);   // extract new block bit, it is set if a block starts here
     currentColor &= 0x7F;                          // delete new block bit from color
     // read the old block bit: it is set if the block is at least 2 iterations old
     assert(bitfile_tell(b)==k);
-    bool old_block = bitfile_read_or_write(b,new_block);
-    if(new_block && !old_block && g->lcpCompute)
+    bool old_block = bitfile_read_or_write(b,new_block);// read bit and simultaneouly set it if new_block==true
+    if(new_block && !old_block && g->lcpCompute) // the block was created exactly during the previous iteration 
       {writeLcp(k,prefixLength-2,g); lcpWritten++;} // save lcp value found in previous iteration
     if (old_block) {
       // if the block we just left is a singleton we add it to liquid that remains active
@@ -194,10 +195,39 @@ static bool addCharToPrefix128ext(solidBlockFile *solidHead, liquidBlock *liquid
  * character in the prefix. If two suffixes are in different blocks at
  * the begining of iteration with prefix_length=i this means their contexts differ
  * in one of the positions 1,2,...i-1 and if they are put for the first time 
- * in different block during iteration with prefix_length=i, theier context 
- * differ for the first time in position i, hence their LCP is i-1 */
+ * in different block during iteration with prefix_length=i, their context 
+ * differ for the first time in position i, hence their LCP is i-1 
+ * Note that LCP values are written to file in the next iteration, so at 
+ * iteration prefix_length we write to file the value prefix_length-2 */
 
+/* This merge algorithm uses 2 colors byte array/files (mergeColor and newMergeColor) 
+ * that are swapped at the end of each iteration. Each array has length n equal 
+ * to the output BWT; in each byte seven bits are used for the color (hence 
+ * max 128 colors) and one bit is used to mark the beginning of a block.
+ * 
+ * In addition the algorithm uses a bitfile of n bits, intially all 0s.  
+ * 
+ * When a block is created the corresponding position is marked 1 in newMergecolor
+ * at the next iteration, newMergeColor has become mergeColor; when we reach a 1
+ * we check the bitfile: if the corrisponding position is 0 then the block has been 
+ * just created, we output the corresponding pair <pos,lcp>, and we set the 
+ * corrisponding bit in bitfile to 1 (so the each position is written only once)
+ * 
+ * */
 
+/* If g->dbOrder>0 then we stop after the iteration with prefix_length==g->dbOrder
+ * This means that we have written to the LCP file all LCP values up to
+ * g->dbOrder-2, and we have information in the bitfiles to recover those
+ * of length g->dbOrder-2
+ * 
+ * Indeed, if g->dbOrder>0 we output the bitfile in a file with extension  
+ * .lcpbit1 and the bits in the current mergeColor as file with extension 
+ * .lcpbit0. By contruction
+ *     lcpbit0[i]==0 -> lcpbit1[i] must be zero and lcp[i] >= g->dbOrder
+ *     lcpbit0[i]==1 && lcpbit1[i]==0, lcp[i] == g->dbOrder-1
+ *     lcpbit0[i]==1 && lcpbit1[i]==1, lcp[i] <  g->dbOrder-1 and the
+ *     corresponding pair <pos,lcp> has been already written to the lcp file
+ */
 
 
 // entry point for the gap bwt/lcp merging procedure with at most 128 input sequences 

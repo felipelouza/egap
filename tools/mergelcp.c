@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
   int heap_size=HEAP_SIZE;
   int pos_size=4, lcp_size=4;
   size_t RAM=0;
-  int k=0;
+  int k=0, e;
   
   while ((c=getopt(argc, argv, "s:vthk:m:")) != -1) {
     switch (c)
@@ -239,8 +239,9 @@ int main(int argc, char **argv) {
 
   f_size = fopen(c_size, "rb");//header file
   size_t n;
-  fread(&n, sizeof(size_t), 1, f_size);
-  printf("n = %zu\n", n);
+  e = fread(&n, sizeof(size_t), 1, f_size);
+  if(e!=1) {perror (__func__); exit(EXIT_FAILURE);}
+  printf("Number of LCP entries in output file: = %zu\n", n);
   
   //LEVEL 1 
   do{ // multilevel merging
@@ -252,7 +253,6 @@ int main(int argc, char **argv) {
     level++;
     h = heap_alloc(heap_size, c_lcp, level, pos_size, lcp_size, RAM);
     
-    //f_size = fopen(c_size, "rb");//header file
     
     //output
     sprintf(c_lcp_multi, "%s.pair.%d.lcp", c_file, level);  

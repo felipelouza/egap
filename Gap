@@ -45,7 +45,7 @@ then all input and output LCP files must use 4 bytes per entry and have
 the extension ".4.lcp". LCP values are stored in little endian format. 
 
 If option -d is used then also the Document Array is computed
-and written to file with exttensioni .da
+and written to file with extension .da
   
 
 All input and output files are uncompressed!
@@ -226,7 +226,7 @@ def phase1(args,logfile, logfile_name):
     # ---- use gSACAK with unlimited memory    
     # shall we use gsaka or gsaka64?
     size = os.path.getsize(args.input[0])
-    if(size<2**31):   # note: the actual imput could be smaller than this becuaose of the fasta/etc information
+    if(size<2**31):   # note: the actual input could be smaller than this because of the fasta/etc information
       exe = os.path.join(args.egap_dir,gsacak_exe)
     else:                     # if in doubt use 64bit version
       exe = os.path.join(args.egap_dir,gsacak64_exe)

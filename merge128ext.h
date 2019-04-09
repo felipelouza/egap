@@ -185,6 +185,21 @@ static bool addCharToPrefix128ext(solidBlockFile *solidHead, liquidBlock *liquid
 }
 
 
+/* The main loop on the following function is based on the variable prefix_length
+ * 
+ * prefix length is the position in the context we are considering:
+ * prefix_lenght==1 is the first char in the prefix, and we consider it
+ * by counting the characters in the input BWT. The first actual iteration 
+ * is done with prefix length==2 which means we are looking at the second 
+ * character in the prefix. If two suffixes are in different blocks at
+ * the begining of iteration with prefix_length=i this means their contexts differ
+ * in one of the positions 1,2,...i-1 and if they are put for the first time 
+ * in different block during iteration with prefix_length=i, theier context 
+ * differ for the first time in position i, hence their LCP is i-1 */
+
+
+
+
 // entry point for the gap bwt/lcp merging procedure with at most 128 input sequences 
 // we assume lcpMerge==false so blockBeginsAt is replaced by a bit array 
 void gap128ext(g_data *g, bool lastRound) {
@@ -224,15 +239,16 @@ void gap128ext(g_data *g, bool lastRound) {
   uint64_t maxSolid = 0;   // maximum space used by a pair of solid block files 
 
   // main loop
-  uint32_t prefixLength = 1;
+  uint32_t prefixLength = 1;                      
   int lcpSize = POS_SIZE + BSIZE;   // number of bytes for each pos,lcp pair, see writeLcp()
   bool merge_completed;
   do {
-    prefixLength+= 1;
+    prefixLength+= 1; 
     if(g->lcpCompute && prefixLength-2>MAX_LCP_SIZE) {fprintf(stderr,"LCP too large: %u\n", prefixLength-2);die(__func__);}
     ibList->fout = gap_tmpfile(g->outPath);
     merge_completed=addCharToPrefix128ext(ibList,liquid,prefixLength,&b,g);
     if (g->verbose>1 && lastRound) {
+      // at this iteration we are discovering suffixes with LCP=prefixLength-1
       printf("Lcp: %u. Memory peak/current: %.2lf/%.2lf bytes/symbol. ibList: %ju\n", 
            prefixLength-1, (double)malloc_count_peak()/g->mergeLen,
            (double)malloc_count_current()/g->mergeLen, (uintmax_t) ftello(ibList->fout));

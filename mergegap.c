@@ -168,7 +168,7 @@ static void init_arrays_largealpha(g_data *g)
 
 // single iteration of the Gap algorithm
 // input is head of the irrelevant lists (fin and fout) and an empty liquid block
-// return true if all sequencen has become irrelevant.  
+// return true if all sequences have become irrelevant.  
 // when working in external memory assumes that g->merge_fname and g->newmerge_fname 
 // hold the name of the files containing the merge and newmerge array
 // during the iteration colors are read from merge sequentially and written to newmerge 

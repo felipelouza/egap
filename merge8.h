@@ -81,7 +81,7 @@ static void init_arrays8_largealpha(g_data *g)
 // input is head of the irrelevant lists (fin and fout) and an empty liquid block
 // return true if the whole sequence has become irrelevant.  
 
-// macros to access colors: one color is in the last 3 bits, the other in bits 4-6
+// macros to access colors: one color is in the last 3 bits, the other is in bits 4-6
 #define get_mergeColor8(k,round) ((round)? (g->mergeColor[(k)]>>3)&0x07 : (g->mergeColor[(k)]&0x07))
 #define set_mergeColor8(k,c,round) (g->mergeColor[(k)] = (round)? \
         ( (g->mergeColor[(k)]&0xF8) | (c)) : ((g->mergeColor[(k)]&0xC7) | ((c)<<3))  )

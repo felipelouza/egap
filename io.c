@@ -211,12 +211,12 @@ void bitfile_flush(bitfile *b)
 }
 
 // init a bitfile: opening file and filling it with size zero bits
-// if temp==true the file is anonymous and immediately deleted, otherwise 
+// if order==0 the file is anonymous and immediately deleted, otherwise 
 // the file has .bitfile extension and maintained after the end of the computation   
 void bitfile_create(bitfile *b, size_t size, char *path, int order) {
   // create local copy of template
   char s[Filename_size];
-  if(order==0) { // if this is a temp file create unique name 
+  if(order==0) { // this is a temp file create unique name 
     sprintf(s,"%s.bitXXXXXX",path);
     // get file descriptor for tmp file fill it with 0s and delete file  
     b->fd = mkstemp(s);

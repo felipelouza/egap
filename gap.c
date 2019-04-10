@@ -31,7 +31,8 @@ void usage(char *name, g_data *g){
   puts("\t-o    basename for output files (def. input basename)");
   puts("\t-r    merge lcp values (overwrite input LCPs)");
   puts("\t-l    compute lcp values");
-  puts("\t-d    create document array, ext: ."DA_EXT);
+  puts("\t-d D  create document array using D bytes per entry, ext: ."DA_EXT);
+  puts("\t-S S  create suffix array using S bytes per entry, ext: ."SA_EXT);
   puts("\t-x    compute lcp without external mergesort");
   puts("\t-a    assume alphabet is small");   
   printf("\t-g G  max # BWTs merged simultaneously (def %llu)\n", MAX_NUMBER_OF_BWTS);   
@@ -209,6 +210,12 @@ int main(int argc, char *argv[]) {
   g.bwtOcc=NULL; g.sizeOfAlpha = 0;      //these two will be initialized later
   bool something_to_do = readBWTsingle(path, &g);
   
+  if(g.numBwt> group_size) { // multiround computation required
+    if(g.outputDA>0 || g.outputSA>0) {
+      puts("Sorry, multiround DA or SA computation not supported");
+      exit(EXIT_FAILURE);
+    }
+  }
   if(!something_to_do) {
     puts("Single BWT in input and no LCP/dBG computation. I have nothing to do!"); 
     g.mergeLen = g.sizeOfAlpha = 1;

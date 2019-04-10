@@ -63,7 +63,6 @@ def main():
   parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
   parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
   parser.add_argument('-D', '--deB', help='compute info for order k deBruijn graph', default=0, type=int)
-  # parser.add_argument('-k', '--k', help='compute k-truncated LCP array', default=0, type=int)
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
@@ -191,13 +190,17 @@ def check_input(args):
   if args.delete and not args.sum:
     print("Option --delete can only be used with --sum")
     sys.exit(1) 
-  
+  # warning if deBruijn graph contruction is used   
+  if args.deB > 0:
+    print("!! Warning: option --deB {0} only considers the first {0} symbols of each suffix".format(args.deB))
+    print("!!         the resulting BWT, LCP etc. are not the standard ones")
 
 # phase1:
 # concatenation or computation of bwts 
 # this version never computes the LCPs: 
 # if required they are computed from scratch in phases 2 and 3
 def phase1(args,logfile, logfile_name):
+  print("--- Phase 1 ---",file=logfile); logfile.flush()
   if args.bwt:
     print("==== creating .size file")    
     with open(args.basename+ ".size","wb") as sizefile:
@@ -226,8 +229,8 @@ def phase1(args,logfile, logfile_name):
     options = "-b"
     if(args.v):   options += "v"    # increase verbosity level
     if(args.rev): options += "R"    # reverse string as input 
-    if(args.sa):  options += "s{byts}".format(byts = args.sbytes)    # output SA (ext: .sa)
-    if(args.da):  options += "d{byts}".format(byts = args.dbytes)    # output DA (ext: .da)
+    if(args.sa):  options += " -s{byts}".format(byts = args.sbytes)    # output SA (ext: .sa)
+    if(args.da):  options += " -d{byts}".format(byts = args.dbytes)    # output DA (ext: .da)
     command = "{exe} {opts} -m {mem} {output} {ifile} 0".format(exe=exe, 
               mem=args.mem, output=outopt, ifile=args.input[0], opts=options)
     # execute choosen algorithm           
@@ -238,6 +241,7 @@ def phase1(args,logfile, logfile_name):
 # phase2: 
 # merging of BWTs and computation of LCP and DA arrays
 def phase2(args,logfile, logfile_name):
+  print("--- Phase 2 ---",file=logfile); logfile.flush()
   bwt_size=os.path.getsize(args.basename + ".bwt")
   if(bwt_size > args.mem*1024*1024 or args.deB > 0):
     # input larger than assigned ram, or dbgraph: external algorithm 
@@ -254,8 +258,8 @@ def phase2(args,logfile, logfile_name):
   exe = os.path.join(args.egap_dir,gap_exe)
   if(args.v): options += "v"    # increase verbosity level
   if(args.lcp): options += "l"  # generate lcp
-  if(args.da): options += "d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
-  if(args.sa): options += "S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
+  if(args.da): options += " -d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
+  if(args.sa): options += " -S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
   if(args.deB>0): options += " -D{k}".format(k = args.deB)      # info for order-k debrijin graph
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
               byts = args.lbytes, opts=options, ibase=args.basename)
@@ -266,6 +270,7 @@ def phase2(args,logfile, logfile_name):
 # phase3: 
 # merging of LCP values
 def phase3(args,logfile, logfile_name):
+  print("--- Phase 3 ---",file=logfile); logfile.flush()
   exe = os.path.join(args.egap_dir,mergelcp_exe)
   command = "{exe} -s 256 {ibase} {pos} {lcp} -t -v -m {mem} -k {k} ".format(exe=exe, 
               mem=args.mem, ibase=args.basename, pos=POS_SIZE, lcp=args.lbytes, k=args.deB)

@@ -131,7 +131,7 @@ void multiround(bool hm, int group_size,char *path, g_data *input, int num_threa
   // there is some code duplication, but it is an important special case 
   if(input->numBwt > group_size) { 
     offset = group_size-1; // first BWT to consider 
-    tot_symb = 0;          // totla number of symbols to skip
+    tot_symb = 0;          // total number of symbols to skip
     for(int i=0;i<offset;i++)
       tot_symb += input->bwtLen[i];
     // prepare merge task  
@@ -168,7 +168,7 @@ void multiround(bool hm, int group_size,char *path, g_data *input, int num_threa
     check_g_data(input);
   }
   assert(input->numBwt <= group_size);
-  // execute last round (only point where gap/hm with last round is called) 
+  // execute last round (only point where gap/hm with lastRound==true is called) 
   if (hm) holtMcMillan(input, true);
   else gap(input, true);
 }

@@ -97,8 +97,8 @@ int main(int argc, char** argv){
         outfile = optarg; break;     // output file base name  
       case 'R':
         Reversed++; break;
-			case 'd':
-				OutputDA=atoi(optarg); DA_COMPUTE=1; break;
+      case 'd':
+        OutputDA=atoi(optarg); DA_COMPUTE=1; break;
       case '?':
         exit(EXIT_FAILURE);
       }
@@ -223,8 +223,8 @@ int main(int argc, char** argv){
     f_sa = file_open(s, "wb");
   }
 
-	size_t curr=0;
-	size_t sum=0;
+  size_t curr=0;
+  size_t sum=0;
   // processing of individual chunks 
   for(b=0; b<chunks; b++){
 
@@ -234,9 +234,9 @@ int main(int argc, char** argv){
     // disk access
     //if(len_file==0)
     int_t bl = b;
-		#if	REVERSE_SCHEME==2
-	    if(Reversed) bl = chunks-(b+1);
-		#endif
+    #if REVERSE_SCHEME==2
+      if(Reversed) bl = chunks-(b+1);
+    #endif
     fseek(f_in, pos[bl], SEEK_SET);
 
     R = (unsigned char**) file_load_multiple_chunks(c_file, K[bl], &len, f_in);
@@ -274,8 +274,8 @@ int main(int argc, char** argv){
     //concatenate strings R[i] to str
     unsigned char *str = NULL;
 
-		if(!Reversed)	str = cat_char(R, K[bl], &len);
-		else	str = cat_char_rev(R, K[bl], &len);
+    if(!Reversed) str = cat_char(R, K[bl], &len);
+    else  str = cat_char_rev(R, K[bl], &len);
 
     #if DEBUG
       int_t i;
@@ -288,7 +288,7 @@ int main(int argc, char** argv){
         printf("%" PRIdN ") %s (%zu)\n", i, R[i], strlen((char*)R[i]));
       }
       if(Reversed){
-			 printf("Reverse scheme: %d\n", REVERSE_SCHEME);
+       printf("Reverse scheme: %d\n", REVERSE_SCHEME);
        int count=0;
         printf("T^rev = ");
         for(i=0;i<len; i++){
@@ -314,11 +314,11 @@ int main(int argc, char** argv){
       LCP = (int_t*) malloc(len*sizeof(int_t));
       for(i=0; i<len; i++) LCP[i]=0;
     }
-		int_t *DA = NULL;
-		if(DA_COMPUTE){
+    int_t *DA = NULL;
+    if(DA_COMPUTE){
       DA = (int_t*) malloc(len*sizeof(int_t));
       for(i=0; i<len; i++) DA[i]=0;
-		}
+    }
     
     if(Verbose)
       time_start(&t_start, &c_start);
@@ -326,10 +326,10 @@ int main(int argc, char** argv){
     // computation of SA, DA and possibly LCP
     depth = gsacak((unsigned char*)str, (uint_t*)SA, LCP, DA, len);
 
-    if(Verbose)
+    if(Verbose) {
       fprintf(stderr,"gsacak returned depth: %"PRIdN"\n", depth);
-    if(Verbose)
       fprintf(stderr,"%.6lf\n", time_stop(t_start, c_start));
+    }
   
     // output BWT  
     if(OutputBwt) {
@@ -417,11 +417,11 @@ int main(int argc, char** argv){
     // free SA (LCP) and concatenated input collection  
     free(SA);
     if(LCP_COMPUTE) free(LCP);
-		if(DA_COMPUTE) free(DA);
+    if(DA_COMPUTE) free(DA);
     free(str);
     
-		curr+=K[bl];
-		sum+=len-1;
+    curr+=K[bl];
+    sum+=len-1;
 
   } // end chunks loop 
 

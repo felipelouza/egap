@@ -250,7 +250,8 @@ void gap128ext(g_data *g, bool lastRound) {
   open_bw_files(g);
   // create 0 initialized bitfile (reading and writing using bitfile_* functions)
   bitfile b;
-  bitfile_create(&b,g->mergeLen,g->outPath,g->dbOrder);
+  // if it is the last round and g->dbOrder>0 the bitfile must be preserved 
+  bitfile_create(&b,g->mergeLen,g->outPath,lastRound?g->dbOrder:0);
   // allocate Z (merge) Znew (reading only Z, writing only newZ) 
   alloc_merge_arrays(g);
   
@@ -273,7 +274,7 @@ void gap128ext(g_data *g, bool lastRound) {
   int lcpSize = POS_SIZE + BSIZE;   // number of bytes for each pos,lcp pair, see writeLcp()
   bool merge_completed;
   do {
-    prefixLength+= 1; 
+    prefixLength+= 1;
     if(g->lcpCompute && prefixLength-2>MAX_LCP_SIZE) {fprintf(stderr,"LCP too large: %u\n", prefixLength-2);die(__func__);}
     ibList->fout = gap_tmpfile(g->outPath);
     merge_completed=addCharToPrefix128ext(ibList,liquid,prefixLength,&b,g);
@@ -314,7 +315,7 @@ void gap128ext(g_data *g, bool lastRound) {
   close_bw_files(g);
   
   // for dbGraph info we need to extract the hi bit from the merge arrray
-  if(g->dbOrder>1) 
+  if(lastRound && g->dbOrder>0) 
     extract_bitfile(g->merge_fname, g->mergeLen, g->outPath, g->dbOrder);
   
   // computation complete, do the merging. 
@@ -325,14 +326,7 @@ void gap128ext(g_data *g, bool lastRound) {
     close_unsortedLCP_files(g);
     if(g->verbose>0) printf("Remind to run lcpmerge to obtain the final LCP array\n"); 
   }
-  // if dbOrder>1 rename BWT file, since it is a partially ordered BWT
-  if(g->dbOrder>1) {
-    char tmp1[Filename_size];
-    snprintf(tmp1,Filename_size,"%s.%d.%s",g->outPath,g->dbOrder, BWT_EXT);
-    if(rename(g->bwfname,tmp1)!=0)
-      die("Cannot rename BWT file");
-  }
-
+  
   free(g->F); // last five arrays deallocated
   free(g->firstColumn); 
   free(g->inCnt);

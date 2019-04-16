@@ -50,25 +50,28 @@ bool readBWTsingle(char *path, g_data *g)
   g->numBwt = flen/8;
   assert(g->numBwt>0);
 
-  if(g->numBwt==1 && g->outputSA) { // if there is a single (multi)-bwt the DA does not change
-    char tmp1[Filename_size];
-    char tmp2[Filename_size];
-    snprintf(tmp1,Filename_size,"%s.%d.%s",path,g->outputSA, SA_BL_EXT);
-    snprintf(tmp2,Filename_size,"%s.%d.%s",path,g->outputSA, SA_EXT);
-    if(rename(tmp1,tmp2)!=0)
-      die("Cannot rename SA file");
-  }
-  if(g->numBwt==1 && g->outputDA) { // if there is a single (multi)-bwt the DA does not change
-    char tmp1[Filename_size];
-    char tmp2[Filename_size];
-    snprintf(tmp1,Filename_size,"%s.%d.%s",path,g->outputDA, DA_BL_EXT);
-    snprintf(tmp2,Filename_size,"%s.%d.%s",path,g->outputDA, DA_EXT);
-    if(rename(tmp1,tmp2)!=0)
-      die("Cannot rename DA file");
-  }
-
   // single BWT with no lcp or dbInfo computation: nothing to do
-  if(g->numBwt==1 && !g->lcpCompute && g->dbOrder==0) {
+  if(g->numBwt==1 && !g->lcpCompute && g->dbOrder==0){ 
+    if(g->outputSA) { // if there is a single (multi)-bwt the DA does not change
+      char tmp1[Filename_size];
+      char tmp2[Filename_size];
+      snprintf(tmp1,Filename_size,"%s.%d.%s",path,g->outputSA, SA_BL_EXT);
+      snprintf(tmp2,Filename_size,"%s.%d.%s",path,g->outputSA, SA_EXT);
+      if(rename(tmp1,tmp2)!=0)
+        die("Cannot rename SA file");
+    }
+    if(g->outputDA) { // if there is a single (multi)-bwt the DA does not change
+      char tmp1[Filename_size];
+      char tmp2[Filename_size];
+      snprintf(tmp1,Filename_size,"%s.%d.%s",path,g->outputDA, DA_BL_EXT);
+      snprintf(tmp2,Filename_size,"%s.%d.%s",path,g->outputDA, DA_EXT);
+      if(rename(tmp1,tmp2)!=0)
+        die("Cannot rename DA file");
+    }
+    size_t size;
+    size_t r = fread(&size, 8, 1, f);// sizes are stored in 64 bits 
+    if(r!=1) die(__func__);
+    g->mergeLen = size;
     fclose(f);
     return false;
   }

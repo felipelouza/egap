@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
   }
   if(!something_to_do) {
     puts("Single BWT in input and no LCP/dBG computation. I have nothing to do!"); 
-    g.mergeLen = g.sizeOfAlpha = 1;
+    //g.mergeLen = g.sizeOfAlpha = 1;
   }
   else {
     // init additional g fields 

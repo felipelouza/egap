@@ -66,13 +66,17 @@ int heap_sort_level(heap *h, FILE *f_lcp, size_t *sum, char* c_file, int level, 
     /**/
     if(level==0){
       pos=pos(tmp);
-      pair aux=lcp(k); //k-truncated LCP-values
-      for(;curr<pos-1;curr++){
-        fprintf(stderr,"%lu, %lu (lcp = %lu)\n", pos, curr, lcp(aux));
-        heap_write(h, f_lcp, aux, level);
-        (*sum)++;
+      if(k){
+        pair aux=lcp(k); //k-truncated LCP-values
+        for(;curr<pos-1;curr++){
+          #if CHECK == 1
+            fprintf(stderr,"%lu, %lu (lcp = %lu)\n", pos, curr, lcp(aux));
+          #endif
+          heap_write(h, f_lcp, aux, level);
+          (*sum)++;
+        }
+        curr=pos;
       }
-      curr=pos;
     }
     /**/
 
@@ -369,17 +373,21 @@ int main(int argc, char **argv) {
   
   printf("N = %zu (%zu)\n", total, n);
 
-  //complete LCP empty entries
-  /**/
-  int64_t curr=total;
-  int64_t pos=n;
+  if(k){
+    //complete LCP empty entries
+    /**/
+    int64_t curr=total;
+    int64_t pos=n;
 
-  pair aux=lcp(k); //k-truncated LCP-values
-  for(;curr<pos-1;curr++){
-    fprintf(stderr,"%lu, %lu (lcp = %lu)\n", pos, curr, lcp(aux));
-    heap_write(h, f_lcp, aux, level);
+    pair aux=lcp(k); //k-truncated LCP-values
+    for(;curr<pos;curr++){
+      #if CHECK == 1
+        fprintf(stderr,"** %lu, %lu (lcp = %lu)\n", pos, curr, lcp(aux));
+      #endif
+      heap_write(h, f_lcp, aux, level);
+    }
+    /**/
   }
-  /**/
   
   heap_free(h, f_lcp, 0);
   fclose(f_lcp);

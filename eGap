@@ -260,7 +260,7 @@ def phase2(args,logfile, logfile_name):
   if(args.lcp): options += "l"  # generate lcp
   if(args.da): options += " -d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
   if(args.sa): options += " -S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
-  if(args.deB>0): options += " -D{k}".format(k = args.deB)      # info for order-k debrijin graph
+  if(args.deB>0): options += " -D{k}".format(k = args.deB+1)      # info for order-k debrijin graph
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
               byts = args.lbytes, opts=options, ibase=args.basename)
   print("==== gap ({alg})\n Command: {cmd}".format(alg=mode, cmd=command))

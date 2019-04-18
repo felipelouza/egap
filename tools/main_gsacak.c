@@ -187,6 +187,7 @@ int main(int argc, char** argv){
   // files used for multi BWT, LCP and their lengths 
   FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL, *f_da = NULL, *f_sa = NULL;
   FILE *f_size = NULL; //size of each chunk
+  FILE *f_docs = NULL; //number of documents in each chunk
 
   if(Extract>1){
     char s[500]; 
@@ -215,6 +216,8 @@ int main(int argc, char** argv){
     char s[500]; 
     snprintf(s,500,"%s.%d.da_bl",outfile,OutputDA); 
     f_da = file_open(s, "wb");
+    snprintf(s,500,"%s.docs",outfile);
+    f_docs = file_open(s, "wb");
   }
 
   if(OutputSA) {
@@ -363,7 +366,10 @@ int main(int argc, char** argv){
 
     // output DA alone
     if(DA_COMPUTE){
-      for(i=0; i<len; i++) DA[i]+=curr;
+      //for(i=0; i<len; i++) DA[i]+=curr;
+      size_t docs = K[bl];
+      fwrite(&docs, sizeof(size_t), 1, f_docs);
+      //printf("curr = %" PRIdN "\n", K[bl]);
       file_write_array(f_da, DA+1, len-1, OutputDA);//ignore the first DA-value
     }
 
@@ -448,6 +454,7 @@ int main(int argc, char** argv){
 
   if(DA_COMPUTE){
     fclose(f_da);
+    fclose(f_docs);
   }
 
   if(OutputSA){

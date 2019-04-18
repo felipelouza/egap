@@ -102,6 +102,7 @@ typedef uint32_t palette;
 
 #define BWT_EXT "bwt"
 #define LEN_EXT "size"
+#define DOCS_EXT "docs"
 #define HM_BWT_EXT "bwtHM"
 #define DA_EXT "da"
 #define DA_BL_EXT "da_bl"
@@ -123,6 +124,7 @@ typedef struct {
   // input: shared among threads
   symbol **bws;            // bws[0] ... bws[numBwt-1] are input bwt
   customInt *bwtLen;       // bwtLen[i] is size of bwt[i]
+  customInt *bwtDocs;      // bwtDocs[i] is the starting DOC-id of each chunk
   customInt **bwtOcc;      // occ of each symbol in each bwt (used ony if smallAlpha==true)
   int numBwt;              // number of bwt to be merged
   customInt mergeLen;      // sum_i bwtLen[i]

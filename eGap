@@ -212,6 +212,21 @@ def phase1(args,logfile, logfile_name):
       for name in args.input:
         with open(name,'rb') as fd:
           shutil.copyfileobj(fd, bwtfile, 1024*1024*10) # 10 MBs buffer
+    if(args.da): 
+      print("==== creating .docs file")    
+      with open(args.basename+ ".docs","wb") as docsfile:
+        for name in args.input:
+          filename = os.path.splitext(name)[0]+".docs".format(byts=args.dbytes)
+          print(filename)
+          with open(filename,'rb') as fd:
+            shutil.copyfileobj(fd, docsfile, 1024*1024*10) # 10 MBs buffer
+        print("==== creating .da_bl file")
+      with open(args.basename+".{byts}.da_bl".format(byts=args.dbytes),"wb") as dablfile:
+        for name in args.input:
+          filename = os.path.splitext(name)[0]+".{byts}.da".format(byts=args.dbytes)
+          print(filename)
+          with open(filename,'rb') as fd:
+            shutil.copyfileobj(fd, dablfile, 1024*1024*10) # 10 MBs buffer
     return True # everything fine
   else:        
     # ---- gSACAK    

@@ -76,6 +76,27 @@ bool readBWTsingle(char *path, g_data *g)
     return false;
   }
 
+  if(g->outputDA) { 
+    g->bwtDocs = (customInt *) malloc (g->numBwt * sizeof(customInt));
+    snprintf(filename,Filename_size,"%s.%s",path,DOCS_EXT);
+    FILE *f = fopen(filename,"r");
+    if(f==NULL) die(__func__);
+    size_t sum=0;
+    for (int i = 0; i < g->numBwt; ++i) {
+      customInt docs;
+      size_t r = fread(&docs, 8, 1, f);// docs are stored in 64 bits 
+      if(r!=1) die(__func__);
+      g->bwtDocs[i] = sum;
+      sum+=docs;
+      //printf("--> %zu\n",  docs);
+    }
+    fclose(f);
+    f = fopen(filename,"wb");
+    size_t e = fwrite(&sum,8,1,f);
+    if(e!=1) die(__func__);
+    fclose(f);
+  }
+
   // we have the number of (multi)BWTs: allocate g->bwtLen and g->bws  
   g->bwtLen = (customInt *) malloc (g->numBwt * sizeof(customInt));
   g->bws = (symbol **) malloc (g->numBwt * sizeof(symbol *));
@@ -403,6 +424,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
       int da_value=0;
       int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
       if(e!=1) die(__func__);
+      da_value+=g->bwtDocs[currentColor];
       //if(fputc(currentColor, daOutFile)==EOF)
       if(fwrite(&da_value, g->outputDA, 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   
@@ -537,6 +559,7 @@ void mergeBWT8(g_data *g, bool lastRound)
       int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
       if(e!=1) die(__func__);
       //if(fputc(currentColor, daOutFile)==EOF)
+      da_value+=g->bwtDocs[currentColor];
       if(fwrite(&da_value, g->outputDA, 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   
       //printf("%d ==> %d\n", currentColor, da_value);

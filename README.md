@@ -1,8 +1,9 @@
 # eGap: BWT and LCP computation for sequence collections in external memory
 
 This software is an implementation of the eGap algorithm described in 
-[*External memory BWT and LCP computation for sequence collections with applications*](https://doi.org/10.4230/LIPIcs.WABI.2018.10) by
-L. Egidi, F. A. Louza, G. Manzini, and G. P. Telles. Copyright 2017-2018 by the authors. 
+[*External memory BWT and LCP computation for sequence collections with 
+applications*](https://doi.org/10.1186/s13015-019-0140-0) by
+L. Egidi, F. A. Louza, G. Manzini, and G. P. Telles. Copyright 2017-2019 by the authors. 
 
 
 ## Prerequisites
@@ -61,23 +62,34 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 *-o, --out*        
   specify basename for output and temporary files
 
-*-l, --lcp*          
-  compute LCP Array
-  
-*-d, --da*          
-  compute Document Array
-  
-*-s, --sa*          
-  compute Suffix Array
-  
 *-b, --bwt*          
   inputs are bwt files (requires -o)
 
+*-l, --lcp*          
+  compute LCP Array
+ 
+*--rev*      
+  compute data structures for the reversed string  
+  
 *-m, --mem*     
   specify available memory in MB (def. 4096). **Note:** do not assign all the available RAM to the algorithm: leave *at least* 5% to the operating system.
   
 *--lbytes*      
   number of bytes for each LCP entry (def. 2)
+
+*-v*       
+  verbose output in the log file
+
+
+## Suffix array and document array computation 
+
+Use the options: 
+
+*-d, --da*          
+  compute Document Array
+  
+*-s, --sa*          
+  compute Suffix Array
 
 *--dbytes*      
   number of bytes for each DA entry (def. 4)
@@ -85,11 +97,26 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 *--sbytes*      
   number of bytes for each SA entry (def. 4)
 
-*--rev*      
-  compute data structures for the reversed string  
+ 
 
-*-v*       
-  verbose output in the log file
+## Truncated LCP values and de Bruijn graph info 
+
+The running time of eGap can be decreased if, instead of the true 
+LCP values, the user settles for computing the LCP values up to a certain 
+threshold *k*. Using the option *--trlcp k*, as an altenative to *--lcp*, 
+the algorithm computes an LCP array in which all values greater than *k* are
+replaced by the value *k*.
+
+
+Another option offered by eGap, alternative to (truncated) LCP, 
+is to compute the info required for the construction of the succinct (BOSS)
+representation of the de Bruijn graph associated to the input sequences. 
+Using the option *--deB k* eGap compute two bitfiles with extension 
+.lcpbit0 and .lcpbit1 which, together with the BWT, can be used to compute 
+the BOSS representation of the de Bruijn graph as described in the 
+[Application](https://almob.biomedcentral.com/articles/10.1186/s13015-019-0140-0#Sec14)
+of the AMB paper. 
+
 
 
 
@@ -109,5 +136,5 @@ Pacbio       | 8.0   | 942,248    | 71,561   | 9,116    | 3,084 | 18.32   | [.ta
 
 We have also used versions of the above collections shortened to 1GB. The shortened versions can be obtained by the above files using [simple command line instructions](https://drive.google.com/open?id=1rjObN6fzXU_LrOLadCgxQ0bXh5mlTwNq). Check all [md5sums](https://drive.google.com/open?id=1CgoVBpElte6iQ6I1XkvYvi56lHqvq1kK) after dowloading and extraction.
 
-The results of our experiments are reported on the above WABI paper and on an extended journal version (in preparation).
+The results of our experiments are reported on the above AMB paper.
 

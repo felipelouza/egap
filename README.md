@@ -3,7 +3,10 @@
 This software is an implementation of the eGap algorithm described in 
 [*External memory BWT and LCP computation for sequence collections with 
 applications*](https://doi.org/10.1186/s13015-019-0140-0) by
-L. Egidi, F. A. Louza, G. Manzini, and G. P. Telles. Copyright 2017-2019 by the authors. 
+L. Egidi, F. A. Louza, G. Manzini, and G. P. Telles, Algorithms for 
+Molecular Biology (2019).
+
+Copyright 2017-2019 by the authors. 
 
 
 ## Prerequisites
@@ -115,7 +118,7 @@ Using the option *--deB k* eGap compute two bitfiles with extension
 .lcpbit0 and .lcpbit1 which, together with the BWT, can be used to compute 
 the BOSS representation of the de Bruijn graph as described in the 
 [Application](https://almob.biomedcentral.com/articles/10.1186/s13015-019-0140-0#Sec14)
-of the AMB paper. 
+section of the [AMB paper](https://doi.org/10.1186/s13015-019-0140-0). 
 
 
 

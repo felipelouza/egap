@@ -1,6 +1,15 @@
 // external memory version only
 // using merge/mergecolor to store up to 128 colors + 1 bit 
 
+// This is the purely external memory version of the algorithm:
+// all data is stored in files.
+
+// This is the only version supporting the computation of the truncated lcp
+// (options `-D k -l`) or the order-k de Bruijn graph construction
+// (option `-D k`) see comments and description immediately before
+// fucntion gap128ext()
+
+
 /**
  * Using the number of occs of each symbol in each bwt (stored in bwtOcc)
  * init the array Z (mergeColor) and B (blockBeginsAt) at the value
@@ -215,21 +224,32 @@ static bool addCharToPrefix128ext(solidBlockFile *solidHead, liquidBlock *liquid
  * 
  * */
 
-/* If g->dbOrder>0 then we stop after the iteration with prefix_length==g->dbOrder
- * This means that we have written to the LCP file all LCP values up to
- * g->dbOrder-2, and we have information in the bitfiles to recover those
- * of length g->dbOrder-2
+/* If g->dbOrder>0 and !g->lcpCompute we are interested in the bitfiles
+ * required to compute the de Bruijn graph for the input sequences (see eBoss repository)  
+ * We stop after the iteration with 
+ *         prefix_length==g->dbOrder
+ * This means we have computed, but not saved, the LCP values 
+ * up to g->dbOrder-2; more importantly we output the bitfiles
+ * with extension .lcpbit0 and .lcpbit1 that enable us to distinguish between
+ * positions with LCP >= g->dbOrder, those with LCP == g->dbOrder-1, and
+ * those with LCP < g->dbOrder-1. 
  * 
  * Indeed, if g->dbOrder>0 we output the bitfile in a file with extension  
  * .lcpbit1 and the bits in the current mergeColor as file with extension 
- * .lcpbit0. By contruction
- *     lcpbit0[i]==0 -> lcpbit1[i] must be zero and lcp[i] >= g->dbOrder
+ * .lcpbit0. By construction
+ *     lcpbit0[i]==0 && lcpbit1[i]==0, lcp[i] >= g->dbOrder
  *     lcpbit0[i]==1 && lcpbit1[i]==0, lcp[i] == g->dbOrder-1
- *     lcpbit0[i]==1 && lcpbit1[i]==1, lcp[i] <  g->dbOrder-1 and the
- *     corresponding pair <pos,lcp> has been already written to the lcp file
+ *     lcpbit0[i]==? && lcpbit1[i]==1, lcp[i] <  g->dbOrder-1 
  */
 
-
+/* If g->dbOrder>0 and g->lcpCompute we are interested in computing
+ * the truncated LCP values: we stop after the iteration with 
+ *      prefix_length==g->dbOrder+1
+ * This means that we have written to the LCP file all LCP values up to
+ * g->dbOrder-1, and all missing LCP values are >= g->dbOrder
+ * */
+ 
+ 
 // entry point for the gap bwt/lcp merging procedure with at most 128 input sequences 
 // we assume lcpMerge==false so blockBeginsAt is replaced by a bit array 
 void gap128ext(g_data *g, bool lastRound) {
@@ -250,8 +270,8 @@ void gap128ext(g_data *g, bool lastRound) {
   open_bw_files(g);
   // create 0 initialized bitfile (reading and writing using bitfile_* functions)
   bitfile b;
-  // if it is the last round and g->dbOrder>0 the bitfile must be preserved 
-  bitfile_create(&b,g->mergeLen,g->outPath,lastRound?g->dbOrder:0);
+  // if it is the last round and g->dbOrder>0 and !lcp_compute the bitfile must be preserved, see comment at start of file
+  bitfile_create(&b,g->mergeLen,g->outPath, (!lastRound || g->lcpCompute) ? 0 : g->dbOrder  );
   // allocate Z (merge) Znew (reading only Z, writing only newZ) 
   alloc_merge_arrays(g);
   
@@ -294,7 +314,8 @@ void gap128ext(g_data *g, bool lastRound) {
     // update solid block files:
     rewind(ibList->fout);
     ibList->fin = ibList->fout;
-  } while(!merge_completed && (prefixLength!=g->dbOrder));  // end main loop
+  } while(!merge_completed && (prefixLength!=g->dbOrder+(g->lcpCompute?1:0)));  // end main loop
+  // stop at iteration g->dbOrder or,if interested in trucated LCP, g->dbOrder+1
   if(ibList->fin!=NULL) fclose(ibList->fin);
 
   if (g->verbose>0) {
@@ -311,11 +332,12 @@ void gap128ext(g_data *g, bool lastRound) {
   }
   liquid_free(liquid);
   ibHead_free(ibList);
+  
   bitfile_destroy(&b);
   close_bw_files(g);
   
-  // for dbGraph info we need to extract the hi bit from the merge arrray
-  if(lastRound && g->dbOrder>0) 
+  // for dbGraph info we need to extract the hi bit from the merge array
+  if(lastRound && g->dbOrder>0 && !g->lcpCompute) 
     extract_bitfile(g->merge_fname, g->mergeLen, g->outPath, g->dbOrder);
   
   // computation complete, do the merging. 

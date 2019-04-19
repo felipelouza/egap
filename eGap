@@ -51,18 +51,19 @@ def main():
   parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('input', help='input file name(s)', type=str, nargs='+')
   parser.add_argument('-o', '--out', help='output base name (def. input base name)', default="", type=str)  
+  parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
   parser.add_argument('-l', '--lcp', help='compute LCP Array',action='store_true')
   parser.add_argument('-d', '--da',  help='compute Document Array',action='store_true')
-  parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
+  parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
   parser.add_argument('-m', '--mem', help='available memory in MB (def. 4096)', default=4096, type=int)
+  parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
+  parser.add_argument('--trlcp', help='compute LCP values only up to TRLCP', default=0, type=int)
+  parser.add_argument('--deB', help='compute info for order-DEB deBruijn graph', default=0, type=int)
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
   parser.add_argument('--dbytes', help='bytes x DA entry (def. 4)', default=4, type=int)  
   parser.add_argument('--sbytes', help='bytes x SA entry (def. 4)', default=4, type=int)  
   parser.add_argument('--sum', help='compute output files shasum',action='store_true')
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
-  parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
-  parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
-  parser.add_argument('-D', '--deB', help='compute info for order k deBruijn graph', default=0, type=int)
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
@@ -104,7 +105,7 @@ def main():
       return
 
     # ---- phase3: merging of LCP values
-    if args.lcp:
+    if args.lcp or args.trlcp>0:
       start = time.time()
       if phase3(args,logfile,logfile_name)!=True:
         sys.exit(1)   # fatal error during phase 3 
@@ -190,10 +191,19 @@ def check_input(args):
   if args.delete and not args.sum:
     print("Option --delete can only be used with --sum")
     sys.exit(1) 
-  # warning if deBruijn graph contruction is used   
-  if args.deB > 0:
-    print("!! Warning: option --deB {0} only considers the first {0} symbols of each suffix".format(args.deB))
-    print("!!         the resulting BWT, LCP etc. are not the standard ones")
+  if args.lcp and args.trlcp>0:
+    print("You can compute either the true LCP values of the truncated values, not both!")
+    sys.exit(1) 
+  if (args.lcp or args.trlcp>0) and args.deB>0:
+    print("You can compute either the LCP values or the de Bruijn graph info, not both!")
+    sys.exit(1) 
+  if 0 < args.deB <2 or 0 < args.trlcp < 2:
+    print("Options --deB/--trlcp requires a parameter larger than one"); 
+    sys.exit(1) 
+  # warning if deBruijn graph construction is used   
+  if args.deB > 0 or args.trlcp > 0:
+    print("!! Warning: options --deB/--trlcp only consider the leading k symbols".format(args.deB))
+    print("!!          of each suffix: the resulting BWT is not the standard one")
 
 # phase1:
 # concatenation or computation of bwts 
@@ -254,12 +264,12 @@ def phase1(args,logfile, logfile_name):
 
 
 # phase2: 
-# merging of BWTs and computation of LCP and DA arrays
+# merging of BWTs and computation of LCP and/or DA/SA arrays
 def phase2(args,logfile, logfile_name):
   print("--- Phase 2 ---",file=logfile); logfile.flush()
   bwt_size=os.path.getsize(args.basename + ".bwt")
-  if(bwt_size > args.mem*1024*1024 or args.deB > 0):
-    # input larger than assigned ram, or dbgraph: external algorithm 
+  if(bwt_size > args.mem*1024*1024 or args.deB > 0 or args.trlcp>0):
+    # input larger than assigned ram, or dbgraph/truncated LCP: external algorithm 
     options = "-A128 -g128 -vaE"
     mode = "external memory"
   elif 3 * bwt_size >  args.mem*1024*1024:
@@ -272,10 +282,10 @@ def phase2(args,logfile, logfile_name):
     mode = "internal memory"
   exe = os.path.join(args.egap_dir,gap_exe)
   if(args.v): options += "v"    # increase verbosity level
-  if(args.lcp): options += "l"  # generate lcp
+  if(args.lcp or args.trlcp>0): options += "l"  # generate (truncated) lcp
   if(args.da): options += " -d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
   if(args.sa): options += " -S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
-  if(args.deB>0): options += " -D{k}".format(k = args.deB+1)      # info for order-k de Brujin graph
+  if(args.deB>0 or args.trlcp>0): options += " -D{k}".format(k = args.deB)      # info for order-k de Brujin graph
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
               byts = args.lbytes, opts=options, ibase=args.basename)
   print("==== gap ({alg})\n Command: {cmd}".format(alg=mode, cmd=command))

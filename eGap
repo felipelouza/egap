@@ -180,6 +180,9 @@ def check_input(args):
     if len(args.out)==0:
       print("Please use option -o to specify an output basename!")
       sys.exit(1)
+    if (args.sa):
+      print("SA construction not supported for merging BWT files!")
+      sys.exit(1)
     args.basename = args.out
   # ---- if the input are concatenated texts there is a single file
   else:

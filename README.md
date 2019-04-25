@@ -110,6 +110,9 @@ threshold *k*. Using the option *--trlcp k*, as an altenative to *--lcp*,
 the algorithm computes an LCP array in which all values greater than *k* are
 replaced by the value *k*.
 
+*--trlcp*      
+  compute LCP values only up to TRLCP (truncated LCP)
+
 
 Another option offered by eGap, alternative to (truncated) LCP, 
 is to compute the info required for the construction of the succinct (BOSS)
@@ -120,7 +123,8 @@ the BOSS representation of the de Bruijn graph as described in the
 [Application](https://almob.biomedcentral.com/articles/10.1186/s13015-019-0140-0#Sec14)
 section of the [AMB paper](https://doi.org/10.1186/s13015-019-0140-0). 
 
-
+*--deB*      
+  compute info for order-DEB deBruijn graph
 
 
 ## Datasets

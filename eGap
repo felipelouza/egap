@@ -60,10 +60,11 @@ def main():
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
   parser.add_argument('--dbytes', help='bytes x DA entry (def. 4)', default=4, type=int)  
   parser.add_argument('--sbytes', help='bytes x SA entry (def. 4)', default=4, type=int)  
-  parser.add_argument('--trlcp', help='compute LCP values only up to TRLCP', default=0, type=int)
+  parser.add_argument('--trlcp', help='compute LCP values only up to TRLCP (truncated LCP)', default=0, type=int)
   parser.add_argument('--deB', help='compute info for order-DEB deBruijn graph', default=0, type=int)
   parser.add_argument('--sum', help='compute output files shasum',action='store_true')
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
+  parser.add_argument('--docs', help='stores the number of documents (ext: .docs), required for --bwt --da',action='store_true')
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
@@ -121,9 +122,14 @@ def main():
     if args.sum :
       digest = file_digest(args.basename +".bwt",logfile)
       print("BWT {exe}: {digest}".format(exe=shasum_exe, digest=digest))
-      if args.lcp:
+      if (args.lcp or args.trlcp):
         digest = file_digest("{f}.{n}.lcp".format(f=args.basename,n=args.lbytes),logfile)
         print("LCP {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+      if (args.deB):
+        digest = file_digest("{f}.{n}.lcpbit0".format(f=args.basename,n=args.deB),logfile)
+        print("LCP_0 {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+        digest = file_digest("{f}.{n}.lcpbit1".format(f=args.basename,n=args.deB),logfile)
+        print("LCP_1 {exe}: {digest}".format(exe=shasum_exe, digest=digest))
       if args.da:
         digest = file_digest("{f}.{n}.da".format(f=args.basename,n=args.dbytes),logfile)
         print("DA  {exe}: {digest}".format(exe=shasum_exe, digest=digest))
@@ -141,6 +147,12 @@ def main():
           os.remove("{f}.{n}.da".format(f=args.basename,n=args.dbytes))
         if args.sa:
           os.remove("{f}.{n}.sa".format(f=args.basename,n=args.sbytes))
+      except OSError as  e:                 
+        # if failed, report it back to the user and stop
+        print ("Error: %s - %s." % (e.filename,e.strerror))      
+    if (args.docs == 0):
+      try:
+        os.remove(args.basename+".docs")
       except OSError as  e:                 
         # if failed, report it back to the user and stop
         print ("Error: %s - %s." % (e.filename,e.strerror))      
@@ -202,7 +214,7 @@ def check_input(args):
     sys.exit(1) 
   # warning if deBruijn graph construction is used   
   if args.deB > 0 or args.trlcp > 0:
-    print("!! Warning: options --deB/--trlcp only consider the leading k symbols".format(args.deB))
+    print("!! Warning: options --deB/--trlcp k only consider the leading k symbols".format(args.deB))
     print("!!          of each suffix: the resulting BWT is not the standard one")
 
 # phase1:
@@ -285,7 +297,8 @@ def phase2(args,logfile, logfile_name):
   if(args.lcp or args.trlcp>0): options += "l"  # generate (truncated) lcp
   if(args.da): options += " -d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
   if(args.sa): options += " -S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
-  if(args.deB>0 or args.trlcp>0): options += " -D{k}".format(k = args.deB)      # info for order-k de Brujin graph
+  if(args.deB>0): options += " -D{k}".format(k = args.deB)      # info for order-k de Brujin graph
+  if(args.trlcp>0): options += " -D{k}".format(k = args.trlcp)  # info for truncated LCP
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 
               byts = args.lbytes, opts=options, ibase=args.basename)
   print("==== gap ({alg})\n Command: {cmd}".format(alg=mode, cmd=command))
@@ -297,8 +310,11 @@ def phase2(args,logfile, logfile_name):
 def phase3(args,logfile, logfile_name):
   print("--- Phase 3 ---",file=logfile); logfile.flush()
   exe = os.path.join(args.egap_dir,mergelcp_exe)
-  command = "{exe} -s 256 {ibase} {pos} {lcp} -t -v -m {mem} -k {k} ".format(exe=exe, 
-              mem=args.mem, ibase=args.basename, pos=POS_SIZE, lcp=args.lbytes, k=args.deB)
+  options = "0"
+  if(args.deB>0): options = "{k}".format(k = args.deB)      # info for order-k de Brujin graph
+  if(args.trlcp>0): options = "{k}".format(k = args.trlcp)  # info for truncated LCP
+  command = "{exe} -s 256 {ibase} {pos} {lcp} -t -v -m {mem} -k {opts} ".format(exe=exe, 
+              mem=args.mem, ibase=args.basename, pos=POS_SIZE, lcp=args.lbytes, k=args.deB, opts=options)
   print("==== mergeLcp\n Command:", command)
   return execute_command(command,logfile,logfile_name)
   

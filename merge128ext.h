@@ -225,7 +225,8 @@ static bool addCharToPrefix128ext(solidBlockFile *solidHead, liquidBlock *liquid
  * */
 
 /* If g->dbOrder>0 and !g->lcpCompute we are interested in the bitfiles
- * required to compute the de Bruijn graph for the input sequences (see eBoss repository)  
+ * required to compute the de Bruijn graph for the input sequences (see the App. 
+ * section of AMB paper)
  * We stop after the iteration with 
  *         prefix_length==g->dbOrder
  * This means we have computed, but not saved, the LCP values 

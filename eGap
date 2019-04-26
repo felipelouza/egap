@@ -150,7 +150,7 @@ def main():
       except OSError as  e:                 
         # if failed, report it back to the user and stop
         print ("Error: %s - %s." % (e.filename,e.strerror))      
-    if (args.docs == 0):
+    if (args.docs == 0 and args.da):
       try:
         os.remove(args.basename+".docs")
       except OSError as  e:                 

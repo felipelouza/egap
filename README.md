@@ -66,7 +66,7 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
   specify basename for output and temporary files
 
 *-b, --bwt*          
-  inputs are bwt files (requires -o)
+ inputs are bwt files (requires -o)
 
 *-l, --lcp*          
   compute LCP Array
@@ -82,7 +82,6 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 
 *-v*       
   verbose output in the log file
-
 
 ## Suffix array and document array computation 
 
@@ -100,7 +99,22 @@ Use the options:
 *--sbytes*      
   number of bytes for each SA entry (def. 4)
 
- 
+### Merging BWT files
+
+In the case you want to **merge BWT files** computing **DA**, you must provide DA and `file.docs` with the following option:
+
+*--da --docs*      
+  compute Document Array and output the number of documents into `file.docs` (required to use --bwt --da)
+
+**Example**
+
+```sh
+./eGap dataset/file1.fastq -o file1 --da --docs
+./eGap dataset/file2.fastq -o file2 --da --docs
+
+./eGap --bwt -o merge file1.bwt file2.bwt --da
+```
+
 
 ## Truncated LCP values and de Bruijn graph info 
 

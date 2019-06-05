@@ -7,12 +7,11 @@ of sequences in external memory. There are two different usages depending
 on whether you already have the BWT of the input files:
 
 If you do have the BWTs use option -b: you must specify the file names on 
-the command line  and use the option -o to specify an output basename. 
+the command line and use the option -o to specify an output basename. 
 For example
-  {exe} -bl  -o merge  file1.bwt file2.bwt
-this will produce the output files: merge.bwt, merge.2.lcp, merge.da
-Globbing is accepted: multiple file names can be denoted for example 
-as file?.bwt
+  {exe} -bl -o merge  file1.bwt file2.bwt
+will produce the output files merge.bwt, merge.2.lcp, merge.da
+Globbing works: multiple files can be denoted for example by file*.bwt
  
 If you don't have the BWTs then your input must consists of a single file
 with extension 
@@ -21,7 +20,7 @@ with extension
   .txt       (one input document per line)
 and it is not mandatory to specify the output basename. For example:
   {exe} -l  file.fasta 
-this will produce the output files: file.fasta.bwt, file.fasta.2.lcp
+this will produce the output files file.fasta.bwt, file.fasta.2.lcp
 
 The option --lbytes specifies the number of bytes used for each LCP entry
 and such number becomes part of the lcp file name.
@@ -50,24 +49,26 @@ POS_SIZE = 5    # must be equal to POS_SIZE in config.h
 def main():
   parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('input', help='input file name(s)', type=str, nargs='+')
+  #parser.add_argument('-m', '--mem', help='available memory in MB', type=int, required=True)
   parser.add_argument('-o', '--out', help='output base name (def. input base name)', default="", type=str)  
   parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
   parser.add_argument('-l', '--lcp', help='compute LCP Array',action='store_true')
   parser.add_argument('-d', '--da',  help='compute Document Array',action='store_true')
   parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
   parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
-  parser.add_argument('-m', '--mem', help='available memory in MB (def. 4096)', default=4096, type=int)
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
   parser.add_argument('--dbytes', help='bytes x DA entry (def. 4)', default=4, type=int)  
   parser.add_argument('--sbytes', help='bytes x SA entry (def. 4)', default=4, type=int)  
   parser.add_argument('--trlcp', help='compute LCP values only up to TRLCP (truncated LCP)', default=0, type=int)
-  parser.add_argument('--deB', help='compute info for order-DEB deBruijn graph', default=0, type=int)
+  parser.add_argument('--deB', help='compute info for building a deBruijn graph of order DEB', default=0, type=int)
   parser.add_argument('--sum', help='compute output files shasum',action='store_true')
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
   parser.add_argument('--docs', help='stores the number of documents (ext: .docs), required for --bwt --da',action='store_true')
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
+  requiredNamed = parser.add_argument_group('required named arguments')
+  requiredNamed.add_argument('-m', '--mem', help='memory assigned to the computation in MB', required=True)
   args = parser.parse_args()
   # ---- check number of input files and define basename
   check_input(args)

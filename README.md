@@ -31,10 +31,10 @@ make
 ## Quick test
 
 ```sh
-./eGap --lcp dataset/reads.fastq
+./eGap --lcp -m 4096 dataset/reads.fastq
 ```
 
-This will produce the file `dataset/reads.fastq.bwt` and `dataset/reads.fastq.2.lcp` containing the BWT and LCP array (the latter using 2 bytes per entry)
+This will produce the file `dataset/reads.fastq.bwt` and `dataset/reads.fastq.2.lcp` containing the BWT and LCP array (the latter using 2 bytes per entry). The computation will use 4GB (4096 MB) of RAM
 
 
 ## Description
@@ -43,7 +43,7 @@ Tool to build the **BWT** and optionally the **LCP, DA and SA array** for a coll
 
 * If you do have the BWTs use option -b: you must specify the file names on the command line  and use the option -o to specify an output basename. 
 For example:
- `  eGap  -b --lcp -o merge  file1.bwt file2.bwt`
+ `  eGap  -b --lcp -o merge -m 4096 file1.bwt file2.bwt`
 will produce the output files: *merge.bwt*, *merge.2.lcp*, *merge.da*. Globbing is accepted: multiple file names can be denoted for example as *file?.bwt*
  
 * If you don't have the BWTs then your input must consists of a single file with extension 
@@ -51,7 +51,7 @@ will produce the output files: *merge.bwt*, *merge.2.lcp*, *merge.da*. Globbing 
   `  .fastq`      (one input document per sequence)
   `  .txt`        (one input document per line)
 and it is not mandatory to specify the output basename. For example:
-  `   eGap --lcp  file.fasta` 
+  `   eGap --lcp -m 4096 file.fasta` 
 will produce the output files: *file.fasta.bwt*, *files.fasta.2.lcp*
 
 All input and output files are uncompressed. The value 0 is used as the eof symbol in the output BWT.
@@ -59,8 +59,8 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 
 ## Main command line options
 
-*-h, --help*      
-  show usage
+*-m, --mem*     
+  specify memory assigned to the algorithm in MB. This is a *mandatory* option. **Note:** do not assign all the available RAM to the algorithm: leave at least 5% to the operating system.
 
 *-o, --out*        
   specify basename for output and temporary files
@@ -73,15 +73,16 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
  
 *--rev*      
   compute data structures for the reversed string  
-  
-*-m, --mem*     
-  specify available memory in MB (def. 4096). **Note:** do not assign all the available RAM to the algorithm: leave *at least* 5% to the operating system.
-  
+    
 *--lbytes*      
   number of bytes for each LCP entry (def. 2)
 
 *-v*       
   verbose output in the log file
+
+*-h, --help*      
+  show usage
+
 
 ## Suffix array and document array computation 
 
@@ -101,7 +102,7 @@ Use the options:
 
 ### Merging BWT files
 
-In the case you want to **merge BWT files** computing **DA**, you must provide DA and `file.docs` with the following option:
+In the case you want to **merge BWT files** and later compute the **Document Array**, you must provide DA and `file.docs` with the following option:
 
 *--da --docs*      
   compute Document Array and output the number of documents into `file.docs` (required to use --bwt --da)
@@ -109,10 +110,10 @@ In the case you want to **merge BWT files** computing **DA**, you must provide D
 **Example**
 
 ```sh
-./eGap dataset/file1.fastq -o file1 --da --docs
-./eGap dataset/file2.fastq -o file2 --da --docs
+./eGap -m 4096 dataset/file1.fastq -o file1 --da --docs
+./eGap -m 4096 dataset/file2.fastq -o file2 --da --docs
 
-./eGap --bwt -o merge file1.bwt file2.bwt --da
+./eGap -m 4096 --bwt -o merge file1.bwt file2.bwt --da
 ```
 
 
@@ -124,7 +125,7 @@ threshold *k*. Using the option *--trlcp k*, as an altenative to *--lcp*,
 the algorithm computes an LCP array in which all values greater than *k* are
 replaced by the value *k*.
 
-*--trlcp*      
+*--trlcp*
   compute LCP values only up to TRLCP (truncated LCP)
 
 

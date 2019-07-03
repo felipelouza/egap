@@ -68,7 +68,7 @@ def main():
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
   requiredNamed = parser.add_argument_group('required named arguments')
-  requiredNamed.add_argument('-m', '--mem', help='memory assigned to the computation in MB', required=True)
+  requiredNamed.add_argument('-m', '--mem', help='memory assigned to the computation in MB', type=int, required=True)
   args = parser.parse_args()
   # ---- check number of input files and define basename
   check_input(args)

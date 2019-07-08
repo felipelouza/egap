@@ -163,7 +163,7 @@ int_t* count_multiple_txt(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, in
       }
     }
 
-    (*n) += size;
+    (*n) += (size_t) size;
 		tell = ftell(f_in);
   }
 
@@ -227,7 +227,7 @@ int_t* count_multiple_fastq(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
       }
     }
 
-    (*n) += size;
+    (*n) += (size_t)size;
 
     buf = NULL; len = 0;  
     size = getline(&buf, &len, f_in); // +'s line
@@ -278,7 +278,7 @@ int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
 
     if(i!=count) return 0;
 
-    int_t p=0;
+    size_t p=0;
     buf = NULL; len = 0;  
     while((size = getline(&buf, &len, f_in))!=-1){
 
@@ -352,7 +352,7 @@ char** load_multiple_txt(FILE* f_in, int_t k, size_t *n) {
     }
     c_buffer[i][size-1] = 0;
 
-    (*n) += size;
+    (*n) += (size_t)size;
   }
 
 
@@ -378,7 +378,7 @@ char** load_multiple_fastq(FILE* f_in, int_t k, size_t *n){
     size = getline(&c_buffer[i], &len, f_in); // read line
     //printf("Line of size: %d\n", strlen(c_buffer[i]));
     c_buffer[i][size-1] = 0;
-    (*n) += size;
+    (*n) += (size_t)size;
 
     buf = NULL; len = 0;  
     size = getline(&buf, &len, f_in); // +'s line
@@ -416,10 +416,10 @@ char** load_multiple_fasta(FILE* f_in, int_t k, size_t *n){
     if(i!=count) return 0;
 
     len = 0;
-    int nalloc = 128;
+    size_t nalloc = 128;
     c_buffer[i] = malloc(nalloc*sizeof(char));
 
-    int_t p=0;
+    size_t p=0;
     buf = NULL; len = 0;  
     while((size = getline(&buf, &len, f_in))!=-1){
 

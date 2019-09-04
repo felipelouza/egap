@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
       }
   }
   if(g.dbOrder<0 || g.dbOrder==1) { // illegal order
-    printf("dbOrder must be al least 2\n");
+    printf("dbOrder must be at least 2\n");
     exit(EXIT_FAILURE);
   }
   if(g.dbOrder>1) { // valid order !=0

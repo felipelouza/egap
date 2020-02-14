@@ -2,6 +2,8 @@
 
 import sys, time, argparse, subprocess, os.path, shutil, struct
 
+Version = "v2.0"
+
 Description = """Tool to build the BWT and optionally the LCP and DA array for a collection 
 of sequences in external memory. There are two different usages depending 
 on whether you already have the BWT of the input files:
@@ -80,6 +82,7 @@ def main():
   with open(logfile_name,"w") as logfile:  
 
     print(">>> Begin computation",file=logfile)
+    print(">>> eGap version " + Version,file=logfile)
     show_command_line(logfile)
     logfile.flush()
 

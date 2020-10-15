@@ -1,6 +1,8 @@
 #include "util.h"
 #include "mergehm.h"
-#include "malloc_count/malloc_count.h"
+#if MALLOC_COUNT_FLAG
+  #include "malloc_count/malloc_count.h"
+#endif
 
 // customInt should represent sizeOfMerge
 
@@ -229,9 +231,11 @@ void holtMcMillan(g_data *g, bool lastRound) {
     stop += addCharToPrefix_HM(prefixLength, g);
     if(g->verbose>2 || (g->verbose>1 && lastRound)) { 
       printf("Lcp: "CUSTOM_FORMAT" Stop=%d   ",prefixLength-1,stop);
-      printf("Mem: %zu peak, %zu current, %.2lf/%.2lf bytes/symb\n", malloc_count_peak(),
+      #if MALLOC_COUNT_FLAG
+        printf("Mem: %zu peak, %zu current, %.2lf/%.2lf bytes/symb\n", malloc_count_peak(),
              malloc_count_current(), (double)malloc_count_peak()/g->mergeLen,
              (double)malloc_count_current()/g->mergeLen);
+      #endif
     }
   } while(stop<2);
   

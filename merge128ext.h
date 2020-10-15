@@ -300,10 +300,12 @@ void gap128ext(g_data *g, bool lastRound) {
     ibList->fout = gap_tmpfile(g->outPath);
     merge_completed=addCharToPrefix128ext(ibList,liquid,prefixLength,&b,g);
     if (g->verbose>1 && lastRound) {
-      // at this iteration we are discovering suffixes with LCP=prefixLength-1
-      printf("Lcp: %u. Memory peak/current: %.2lf/%.2lf bytes/symbol. ibList: %ju\n", 
+      #if MALLOC_COUNT_FLAG
+        // at this iteration we are discovering suffixes with LCP=prefixLength-1
+        printf("Lcp: %u. Memory peak/current: %.2lf/%.2lf bytes/symbol. ibList: %ju\n", 
            prefixLength-1, (double)malloc_count_peak()/g->mergeLen,
            (double)malloc_count_current()/g->mergeLen, (uintmax_t) ftello(ibList->fout));
+      #endif
       // also EOF are written to unsortedLcp file so percentages are not accurate     
       if(g->unsortedLcp) printf("   unsorted lcp values: %ju (%.2lf%%)\n",  
       (uintmax_t) ftello(g->unsortedLcp)/lcpSize, (double) 100*ftello(g->unsortedLcp)/(lcpSize*g->mergeLen));
@@ -320,15 +322,19 @@ void gap128ext(g_data *g, bool lastRound) {
   if(ibList->fin!=NULL) fclose(ibList->fin);
 
   if (g->verbose>0) {
-    if(lastRound) {
-      printf("Merge128ext completed (%d bwts). Mem: %zu peak, %zu current, %.2lf/%.2lf bytes/symbol\n", g->numBwt, malloc_count_peak(),
-           malloc_count_current(), (double)malloc_count_peak()/g->mergeLen,
-           (double)malloc_count_current()/g->mergeLen);
-      printf("Peak solid block disk space: %lu, %.2lf bytes/symbol\n", maxSolid, (double)maxSolid/g->mergeLen);
-    }
-    else if(g->verbose>1)
-      printf("Merge128ext completed (%d bwts). Mem: %zu peak, %zu current\n", g->numBwt, malloc_count_peak(),
-           malloc_count_current());
+    #if MALLOC_COUNT_FLAG
+      if(lastRound) {
+        printf("Merge128ext completed (%d bwts). Mem: %zu peak, %zu current, %.2lf/%.2lf bytes/symbol\n", g->numBwt, malloc_count_peak(),
+             malloc_count_current(), (double)malloc_count_peak()/g->mergeLen,
+             (double)malloc_count_current()/g->mergeLen);
+        printf("Peak solid block disk space: %lu, %.2lf bytes/symbol\n", maxSolid, (double)maxSolid/g->mergeLen);
+      }
+      else if(g->verbose>1)
+        printf("Merge128ext completed (%d bwts). Mem: %zu peak, %zu current\n", g->numBwt, malloc_count_peak(),
+             malloc_count_current());
+    #else
+      printf("Merge128ext completed (%d bwts).\n", g->numBwt);
+    #endif
            
   }
   liquid_free(liquid);

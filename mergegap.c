@@ -2,7 +2,10 @@
 #include "util.h"
 #include "io.h"
 #include "alphabet.h"
-#include "malloc_count/malloc_count.h"
+
+#if MALLOC_COUNT_FLAG
+  #include "malloc_count/malloc_count.h"
+#endif
 
 #define min(a,b) ((a)<(b) ? (a) : (b))
 #define max(a,b) ((a)>(b) ? (a) : (b))
@@ -437,9 +440,11 @@ void gap(g_data *g, bool lastRound) {
     ibList->fout = gap_tmpfile(g->outPath);
     merge_completed=addCharToPrefix(ibList,liquid,prefixLength,&mergeChanged,round,g);
     if (g->verbose>1 && lastRound) {
-      printf("Lcp: "CUSTOM_FORMAT". Memory peak/current: %.2lf/%.2lf bytes/symbol. ibList: %ju\n", 
-           prefixLength-1, (double)malloc_count_peak()/g->mergeLen,
-           (double)malloc_count_current()/g->mergeLen, (uintmax_t) ftello(ibList->fout));
+      #if MALLOC_COUNT_FLAG
+        printf("Lcp: "CUSTOM_FORMAT". Memory peak/current: %.2lf/%.2lf bytes/symbol. ibList: %ju\n", prefixLength-1, (double)malloc_count_peak()/g->mergeLen, (double)malloc_count_current()/g->mergeLen, (uintmax_t) ftello(ibList->fout));
+      #else
+        printf("Lcp: "CUSTOM_FORMAT". ibList: %ju\n", prefixLength-1, (uintmax_t) ftello(ibList->fout));
+      #endif
       // also EOF are written to unsortedLcp file so percentages are not accurate     
       if(g->unsortedLcp) printf("   unsorted lcp values: %ju (%.2lf%%)\n",  
       (uintmax_t) ftello(g->unsortedLcp)/lcpSize, (double) 100*ftello(g->unsortedLcp)/(lcpSize*g->mergeLen));
@@ -456,15 +461,21 @@ void gap(g_data *g, bool lastRound) {
   } while(!merge_completed);  // end main loop
   if(ibList->fin!=NULL) fclose(ibList->fin);
 
-  if (g->verbose>0) {
-    if(lastRound)
-      printf("Merge completed (%d bwts). Mem: %zu peak, %zu current, %.2lf/%.2lf bytes/symbol\n", g->numBwt, malloc_count_peak(),
-           malloc_count_current(), (double)malloc_count_peak()/g->mergeLen,
-           (double)malloc_count_current()/g->mergeLen);
-    else if(g->verbose>1)
-      printf("Merge completed (%d bwts). Mem: %zu peak, %zu current\n", g->numBwt, malloc_count_peak(),
-           malloc_count_current());
-  }
+  #if MALLOC_COUNT_FLAG
+    if (g->verbose>0) {
+      if(lastRound)
+        printf("Merge completed (%d bwts). Mem: %zu peak, %zu current, %.2lf/%.2lf bytes/symbol\n", g->numBwt, malloc_count_peak(),
+             malloc_count_current(), (double)malloc_count_peak()/g->mergeLen,
+             (double)malloc_count_current()/g->mergeLen);
+      else if(g->verbose>1)
+        printf("Merge completed (%d bwts). Mem: %zu peak, %zu current\n", g->numBwt, malloc_count_peak(),
+             malloc_count_current());
+    }
+  #else
+    if (g->verbose>0) {
+        printf("Merge completed (%d bwts).\n", g->numBwt);
+    }
+  #endif
   liquid_free(liquid);
   ibHead_free(ibList);
   if(g->extMem) close_bw_files(g);

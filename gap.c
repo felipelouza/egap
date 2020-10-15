@@ -10,7 +10,9 @@
 #include "util.h"
 #include "alphabet.h"
 #include "gap.h"
-#include "malloc_count/malloc_count.h"
+#if MALLOC_COUNT_FLAG
+  #include "malloc_count/malloc_count.h"
+#endif
 
 static void writeOutputBWT(g_data *g, char *path, bool hm);
 
@@ -234,8 +236,11 @@ int main(int argc, char *argv[]) {
     elapsed_wc = difftime(time(NULL),start_wc);
     // printf("Partial elapsed time: %.4lf secs\n", elapsed_wc);
     // printf("Partial computing time: %.4lf secs\n", elapsed);    
-    printf("Merge starting (%d bwts). Mem: %zu peak, %zu current\n", g.numBwt, malloc_count_peak(),
-             malloc_count_current());
+    #if MALLOC_COUNT_FLAG
+      printf("Merge starting (%d bwts). Mem: %zu peak, %zu current\n", g.numBwt, malloc_count_peak(), malloc_count_current());
+    #else
+      printf("Merge starting (%d bwts).\n", g.numBwt);
+    #endif
       
     // do the merging
     multiround(hm,group_size,path,&g, num_threads);
@@ -278,8 +283,10 @@ int main(int argc, char *argv[]) {
   printf("##\n");
   printf("Microseconds per symbol: %.4lf\n", elapsed_wc*1000000.0/g.mergeLen);
   //  fprintf(stderr, "%.6lf\n", elapsed_wc*1000000.0/g.mergeLen);
-  printf("Peak memory allocation: %zu bytes, %.4lf bytes/symbol\n",
+  #if MALLOC_COUNT_FLAG
+    printf("Peak memory allocation: %zu bytes, %.4lf bytes/symbol\n",
            malloc_count_peak(), (double)malloc_count_peak()/g.mergeLen);
+  #endif
   printf("##\n");
 
   return 0; // Done!!!

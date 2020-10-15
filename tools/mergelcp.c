@@ -5,7 +5,9 @@
 #include <limits.h>
                     
 #include "heap.h"
-#include "src/malloc_count.h"
+#if MALLOC_COUNT_FLAG
+  #include "src/malloc_count.h"
+#endif
 #include "lib/utils.h"
 
 

@@ -269,11 +269,13 @@ void gap256(g_data *g, bool lastRound)
       bool mergeChanged = false; // the Z vector has changed in this iteration (used when g->bwtOnly)
       ibList->fout = gap_tmpfile(g->outPath);
       merge_completed=addCharToPrefix256(ibList,liquid,prefixLength,&mergeChanged,round,g);
-      if (g->verbose>1 && lastRound) {
-        printf("Lcp: %u. Memory peak/current: %.2lf/%.2lf bytes/symbol. ibList: %ju\n", 
-             prefixLength-1, (double)malloc_count_peak()/g->mergeLen,
-             (double)malloc_count_current()/g->mergeLen, (uintmax_t) ftello(ibList->fout));
-      }
+      #if MALLOC_COUNT_FLAG
+        if (g->verbose>1 && lastRound) {
+          printf("Lcp: %u. Memory peak/current: %.2lf/%.2lf bytes/symbol. ibList: %ju\n", 
+               prefixLength-1, (double)malloc_count_peak()/g->mergeLen,
+               (double)malloc_count_current()/g->mergeLen, (uintmax_t) ftello(ibList->fout));
+        }
+      #endif
       round  = 1 - round; // change round parity
       if(g->bwtOnly && !mergeChanged) {
         if(g->verbose>1) puts("Gap bwt-only early termination");
@@ -287,13 +289,17 @@ void gap256(g_data *g, bool lastRound)
     if(ibList->fin!=NULL) fclose(ibList->fin);
   }
   if (g->verbose>0) {
-    if(lastRound)
-      printf("Merge256 completed (%d bwts). Mem: %zu peak, %zu current, %.2lf/%.2lf bytes/symbol\n", g->numBwt, malloc_count_peak(),
-           malloc_count_current(), (double)malloc_count_peak()/g->mergeLen,
-           (double)malloc_count_current()/g->mergeLen);
-    else if(g->verbose>1)
-      printf("Merge256 completed (%d bwts). Mem: %zu peak, %zu current\n", g->numBwt, malloc_count_peak(),
-           malloc_count_current());
+    #if MALLOC_COUNT_FLAG
+      if(lastRound)
+        printf("Merge256 completed (%d bwts). Mem: %zu peak, %zu current, %.2lf/%.2lf bytes/symbol\n", g->numBwt, malloc_count_peak(),
+             malloc_count_current(), (double)malloc_count_peak()/g->mergeLen,
+             (double)malloc_count_current()/g->mergeLen);
+      else if(g->verbose>1)
+        printf("Merge256 completed (%d bwts). Mem: %zu peak, %zu current\n", g->numBwt, malloc_count_peak(),
+             malloc_count_current());
+    #else
+      printf("Merge256 completed (%d bwts).\n", g->numBwt);
+    #endif
   }
   liquid_free(liquid);
   ibHead_free(ibList);

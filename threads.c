@@ -1,4 +1,6 @@
-#include "malloc_count/malloc_count.h"
+#if MALLOC_COUNT_FLAG
+  #include "malloc_count/malloc_count.h"
+#endif
 #include "threads.h"
 #include "util.h"
 #include "mergegap.h"

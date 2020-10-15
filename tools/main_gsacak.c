@@ -18,7 +18,9 @@
 #include "lib/file.h"
 #include "lib/suffix_array.h"
 #include "lib/lcp_array.h"
-#include "src/malloc_count.h"
+#if MALLOC_COUNT_FLAG
+  #include "src/malloc_count.h"
+#endif
 #include "src/gsacak.h"
 
 

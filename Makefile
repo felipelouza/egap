@@ -12,11 +12,11 @@ MALLOC_COUNT0=
 MALLOC_COUNT_FLAG=0
 
 ifeq ($(SYSTEM),Darwin)
-  LFLAGS=-lm
+	LFLAGS=-lm
 else
 	MALLOC_COUNT=malloc_count/malloc_count.c
 	MALLOC_COUNT0=malloc_count/malloc_count0.c
-  LFLAGS= -lm -ldl
+	LFLAGS= -lm -ldl
 	MALLOC_COUNT_FLAG=1
 endif
 

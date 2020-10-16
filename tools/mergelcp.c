@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
   }
-  free(optarg);
+  printf("%d %d\n", optind, argc);
   
   if(optind+3==argc) {
     c_file=argv[optind++];

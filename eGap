@@ -320,7 +320,7 @@ def phase3(args,logfile, logfile_name):
   options = "0"
   if(args.deB>0): options = "{k}".format(k = args.deB)      # info for order-k de Brujin graph
   if(args.trlcp>0): options = "{k}".format(k = args.trlcp)  # info for truncated LCP
-  command = "{exe} -s 256 {ibase} {pos} {lcp} -t -v -m {mem} -k {opts} ".format(exe=exe, 
+  command = "{exe} -s 256 -t -v -m {mem} -k {opts} {ibase} {pos} {lcp} ".format(exe=exe, 
               mem=args.mem, ibase=args.basename, pos=POS_SIZE, lcp=args.lbytes, k=args.deB, opts=options)
   print("==== mergeLcp\n Command:", command)
   return execute_command(command,logfile,logfile_name)

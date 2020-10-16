@@ -172,8 +172,15 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
   }
-  printf("%d %d\n", optind, argc);
   
+  if(verbose>0) {
+    puts("Command line:");
+    int i;
+    for(i=0;i<argc;i++)
+      printf(" %s",argv[i]);
+    puts("");
+  }
+
   if(optind+3==argc) {
     c_file=argv[optind++];
     pos_size=atoi(argv[optind++]);
@@ -197,13 +204,6 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
-  if(verbose>0) {
-    puts("Command line:");
-    int i;
-    for(i=0;i<argc;i++)
-      printf(" %s",argv[i]);
-    puts("");
-  }
   
   //config
   char c_lcp[PATH_MAX], c_size[PATH_MAX];

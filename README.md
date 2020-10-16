@@ -160,3 +160,6 @@ We have also used versions of the above collections shortened to 1GB. The shorte
 
 The results of our experiments are reported on the above AMB paper.
 
+## Thanks
+
+Thanks to [Pierre Peterlongo](https://github.com/pierrepeterlongo) by helpful suggestions and debugging.

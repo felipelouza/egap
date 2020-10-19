@@ -589,7 +589,7 @@ void mergeBWT8(g_data *g, bool lastRound)
 
   // merging done: copy back to g->bws[0] or to file
   if(g->extMem) {
-    if(g->verbose>1) printf("Copy back to file. Bytes: %ld, offset %ld\n",g->mergeLen, g->symb_offset);
+    if(g->verbose>1) printf("Copy back to file. Bytes: %zu, offset %zu\n",g->mergeLen, g->symb_offset);
     int fd = open(g->bwfname,O_WRONLY);
     if(fd == -1) die(__func__);
     huge_pwrite(fd, bwtout,sizeof(symbol)*g->mergeLen,sizeof(symbol)*g->symb_offset);

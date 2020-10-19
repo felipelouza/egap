@@ -381,10 +381,10 @@ static void skip128ext(solidBlock *this, bitfile *b, g_data *g)
       }
   }
   // skip in Bit array
-  long oldt = bitfile_tell(b);
+  size_t oldt = bitfile_tell(b);
   bitfile_skip(b,(this->endsAt-this->beginsAt)-1);
   if(bitfile_tell(b)!=this->endsAt) 
-    printf("oldt: %ld, tell: %ld, start %ld, end: %ld\n",oldt,bitfile_tell(b),this->beginsAt,this->endsAt);
+    printf("oldt: %zu, tell: %zu, start %zu, end: %zu\n",oldt,bitfile_tell(b),this->beginsAt,this->endsAt);
 }
 
 

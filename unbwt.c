@@ -160,7 +160,7 @@ void invert_bwt(char *bnam, char *tnam)
     if(e!=s_pos) perror_die("Error writing ouput sequence");
     fprintf(t,"\n");
   }
-  fprintf(stderr,"Recovered %ld sequences\n",occ[0]);
+  fprintf(stderr,"Recovered %zu sequences\n",occ[0]);
   if(fclose(t)!=0) perror_die("Error closing output file");      
   free(rankprev);
   if(high8) free(high8);

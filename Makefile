@@ -13,6 +13,8 @@ MALLOC_COUNT_FLAG=0
 
 ifeq ($(SYSTEM),Darwin)
 	LFLAGS=-lm
+	CFFLAGS+=-Wno-deprecated-declarations
+	CFLAGS+=-Wno-deprecated-declarations
 else
 	MALLOC_COUNT=malloc_count/malloc_count.c
 	MALLOC_COUNT0=malloc_count/malloc_count0.c

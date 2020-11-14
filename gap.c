@@ -5,7 +5,7 @@
 //  * solid blocks are kept in two external files:
 //    one for current blocks, the other for next iteration blocks
 //  * no squeezing: 1) it was not very effective in ram, 2) it increases
-//    alphabet size and therefore the number of access points to mmaped memory
+//    alphabet size and therefore the number of access points to mmapped memory
 //    3) squeezing was still not working for multi-bwt inputs       
 #include "util.h"
 #include "alphabet.h"

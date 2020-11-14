@@ -80,10 +80,10 @@ typedef uint32_t lcpInt;
 #endif
 
 // type used to represent the Merge (aka Z) array
-// defines the maximum number of input BWT's for a single round
+// defines the maximum number of input BWTs for a single round
 // Note that, for LCP computation, we need an open file for each BWT, 
-// so the max number of BWT can be limited in practice by the maximum 
-// number of open files allowed by the system  (eg 1024 on my laptop)
+// so the max number of BWTs can be limited in practice by the maximum 
+// number of open files allowed by the system  (eg 1024 on my linux box)
 #define ZSIZE 1
 #if ZSIZE==1
 typedef uint8_t palette;

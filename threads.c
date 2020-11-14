@@ -10,7 +10,7 @@
 #define min(a,b) ((a)<(b) ? (a) : (b))
 
 
-// init a produce/consumers system
+// init a producer/consumers system
 void pc_system_init(pc_system *pc, int buf_size)
 {
   pc->buf_size = buf_size; 

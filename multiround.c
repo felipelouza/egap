@@ -7,6 +7,19 @@
 
 #define min(a,b) ((a)<(b) ? (a) : (b))
 
+
+// ------ merge of multiple BWTs possibly in parallel
+// the number of BWTs to be merged is in input->numBWT
+// in each round at most group_size BWTs can be merged this number
+// is limited by the size of the elements used to store IDs for BWTs (ZSIZE)
+// The merging is done in rounds; at each round the total number of active BWTs decrease
+// by a factor group_size. Each round must be completed before we can start the next one
+// A round may consist of several parallel merges, and in this cases they can be computed
+// in parallel using multiple threads. 
+// A producer/consumers system and the relative threads are setup for each
+// invocation of multiround, but all rounds share the the same system and threads
+// Since consumer threads do not termiate at the end of a round, the main thread 
+// uses a condition variable to wait for all thread computations to be completed 
 void multiround(bool hm, int group_size,char *path, g_data *input, int num_threads)
 {
   customInt offset, tot_symb=0;
@@ -84,7 +97,7 @@ void multiround(bool hm, int group_size,char *path, g_data *input, int num_threa
       tot_symb += g.mergeLen;
     } // end of inner parallelizable loop
     assert(input->mergeLen==tot_symb);
-    // --- wait all merges for this round have been completed 
+    // --- wait till all merges for this round have been completed 
     if(num_threads>0) {
       e = pthread_mutex_lock(&merge.remutex); if(e) die("remaining lock 2");
       while(merge.remaining>0) {

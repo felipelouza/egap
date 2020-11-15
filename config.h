@@ -182,8 +182,8 @@ typedef struct {
   int pindex;             // index in buffer for producer
   int cindex;             // index in buffer for consumers  
   pthread_mutex_t cmutex; // consumer mutex 
-  sem_t free_slots;       // free slots in the buffer
-  sem_t ready;            // data ready to be processed
+  sem_t *free_slots;       // free slots in the buffer
+  sem_t *ready;            // data ready to be processed
   void *buffer;           // generic data buffer
   int buf_size;           // size of buffer
   // from here fields are more or less specific for merge 

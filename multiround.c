@@ -76,10 +76,10 @@ void multiround(bool hm, int group_size,char *path, g_data *input, int num_threa
       if(g.lcpMerge) g.lcps = input->lcps+offset;
       // execute merge, possibly using threads 
       if(num_threads>0) {
-        e = sem_wait(&merge.free_slots); if(e) die("multiround producer wait");
+        e = sem_wait(merge.free_slots); if(e) die("multiround producer wait");
         check_g_data(&g);
         buffer[merge.pindex++ % merge.buf_size]=g; // copy g_data to buffer
-        e = sem_post(&merge.ready);  if(e) die("multiround producer post");
+        e = sem_post(merge.ready);  if(e) die("multiround producer post");
       }
       else { // no helper threads
         if (hm) holtMcMillan(&g, false);
@@ -129,16 +129,16 @@ void multiround(bool hm, int group_size,char *path, g_data *input, int num_threa
     g.numBwt = 0;
     g.verbose = input->verbose;
     for(int i=0;i<num_threads;i++) {
-        e = sem_wait(&merge.free_slots); if(e) die("cleaning producer wait");
+        e = sem_wait(merge.free_slots); if(e) die("cleaning producer wait");
         buffer[merge.pindex++ % merge.buf_size]=g; // copy g_data to buffer
-        e = sem_post(&merge.ready);  if(e) die("cleaning producer post");
+        e = sem_post(merge.ready);  if(e) die("cleaning producer post");
     }
     for(int i=0;i<num_threads;i++) {
       e = pthread_join(t[i], NULL);
       if(e) die("multiround join");
     }
     pc_system_destroy(&merge);
-    if(input->verbose>1) printf("%d merge threads destroyed",num_threads);
+    if(input->verbose>1) printf("%d merge threads destroyed\n",num_threads);
   }
   // here maybe there is an additional round to go from n<2g, to g;
   // there is some code duplication, but it is an important special case 

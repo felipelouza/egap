@@ -9,6 +9,113 @@
 
 #define min(a,b) ((a)<(b) ? (a) : (b))
 
+// force named semaphores for MacOS
+#if defined(__APPLE__) && defined(__MACH__) 
+#define USE_NAMED_SEMAPHORES
+#endif
+
+#ifdef USE_NAMED_SEMAPHORES /* OS X */
+  #pragma message "Compiling using named semaphores for MacOS systems"
+#endif
+
+// ---- semaphores
+
+// creation and destruction of semaphores using named for MacOS and unnamed for Linux
+// for named semaphores 
+//   if s==NULL a new semaphore is created using the static num to ensure distinct names 
+//   if s!=NULL the last created semaphore is destroyed (unlinked)
+// for unnamed semaphores
+//   if s==NULL a new sem is allocated initialized and a pointer to it returned  
+//   if s!=NULL the passed semaphore is destroyed 
+// also check the error message from sem_unlink or sem_destroy functions 
+// return a pointer to the newly created semaphore or NULL if ti was s!=NULL
+static int Thread_error_wait=3;
+static sem_t *xsem_create_destroy(sem_t *s, unsigned int value, int line, const char *file)
+{
+#ifdef USE_NAMED_SEMAPHORES
+  // -----------------------------------------------
+  // MacOS: close/open a named semaphore
+  // static variables containing pid and # created semaphores 
+  char tmp[NAME_MAX+1];
+  static int num=0;
+  static intmax_t pid;
+  // save pid once
+  if(num==0) pid = (intmax_t) getpid();
+
+  if(s!=NULL) {
+    // check there is a named semaphore still around 
+    if(num==0) {
+      perror("Error deleting non-existing named semaphore");
+      fprintf(stderr,"== %d == Line: %d, File: %s\n",getpid(),line,file);
+      sleep(Thread_error_wait);  // give some extra time to other threads 
+      exit(1);
+    }
+    // delete last created named semaphore
+    int e = snprintf(tmp,NAME_MAX,"%jd.%d",pid,--num);
+    if(e<0 || e>NAME_MAX) {
+      perror("Error creating semaphore name");
+      fprintf(stderr,"== %d == Line: %d, File: %s\n",getpid(),line,file);
+      sleep(Thread_error_wait);  // give some extra time to other threads 
+      exit(1);
+    }
+    e = sem_unlink(tmp);
+    if(e!=0) {
+      perror("Error deleting named semaphore");
+      fprintf(stderr,"== %d == Line: %d, File: %s\n",getpid(),line,file);
+      sleep(Thread_error_wait);  // give some extra time to other threads 
+      exit(1);
+    }
+    return NULL;
+  }
+  // create a new named semphore; create unique name 
+  int e = snprintf(tmp,NAME_MAX,"%jd.%d",pid,num++);
+  if(e<0 || e>NAME_MAX) {
+    perror("Error creating semaphore name");
+    fprintf(stderr,"== %d == Line: %d, File: %s\n",getpid(),line,file);
+    sleep(Thread_error_wait);  // give some extra time to other threads 
+    exit(1);
+  }
+  // open and init semaphore 
+  s = sem_open(tmp,O_CREAT| O_EXCL, S_IRUSR | S_IWUSR ,value);
+  if(s==SEM_FAILED) {
+    perror("Error opening named semaphore"); 
+    fprintf(stderr,"== %d == Line: %d, File: %s\n",getpid(),line,file);
+    sleep(Thread_error_wait);  // give some extra time to other threads 
+    exit(1);
+  }
+  return s;
+#else
+  // ---------------------------------------------- 
+  // linux destroy/init an unnamed semaphore
+  if(s!=NULL) {
+    if(sem_destroy(s) !=0) {
+      perror("Error destroying unnamed semaphore");
+      fprintf(stderr,"== %d == Line: %d, File: %s\n",getpid(),line,file);
+      sleep(Thread_error_wait);  // give some extra time to other threads 
+      exit(1);
+    }
+    return NULL;
+  }
+  // allocate init/ and return an unnamed sem_t
+  s = malloc(sizeof(sem_t));
+  if(s==NULL) {
+    perror("malloc error");
+    fprintf(stderr,"== %d == Line: %d, File: %s\n",getpid(),line,file);
+    sleep(Thread_error_wait);  // give some extra time to other threads 
+    exit(1);
+  }
+  // init with value and no sharing 
+  if(sem_init(s,0,value)!=0) {
+    perror("sem_init error");
+    fprintf(stderr,"== %d == Line: %d, File: %s\n",getpid(),line,file);
+    sleep(Thread_error_wait);  // give some extra time to other threads 
+    exit(1);
+  }
+  return s;
+#endif
+}
+
+
 
 // init a producer/consumers system
 void pc_system_init(pc_system *pc, int buf_size)
@@ -16,11 +123,9 @@ void pc_system_init(pc_system *pc, int buf_size)
   pc->buf_size = buf_size; 
   pc->pindex=0;
   pc->cindex=0;
-  int e = sem_init(&(pc->free_slots),0,buf_size);
-  if(e) die(__func__);
-  e = sem_init(&(pc->ready),0,0);
-  if(e) die(__func__);
-  e = pthread_mutex_init(&(pc->cmutex),NULL);
+  pc->free_slots = xsem_create_destroy(NULL,buf_size,__LINE__,__FILE__);
+  pc->ready = xsem_create_destroy(NULL,0,__LINE__,__FILE__);
+  int e = pthread_mutex_init(&(pc->cmutex),NULL);
   if(e) die(__func__);
   // re condition variable and related mutex
   e = pthread_mutex_init(&(pc->remutex),NULL);
@@ -39,10 +144,8 @@ void pc_system_destroy(pc_system *pc)
   if(e) die(__func__);
   e = pthread_mutex_destroy(&(pc->cmutex));
   if(e) die(__func__);
-  e = sem_destroy(&(pc->ready));
-  if(e) die(__func__);
-  e = sem_destroy(&(pc->free_slots));
-  if(e) die(__func__);
+  xsem_create_destroy(pc->ready,0,__LINE__,__FILE__);
+  xsem_create_destroy(pc->free_slots,0,__LINE__,__FILE__);
 }
 
 // execute a single call to HM or Gap
@@ -53,14 +156,14 @@ void *merger(void *v)
   
   int tot=0;
   while(1) {
-    int e=sem_wait(&pc->ready); // wait there is something to do
+    int e=sem_wait(pc->ready); // wait there is something to do
     if(e) die("consumer wait");
     e = pthread_mutex_lock(&pc->cmutex); // get esclusive access to queue
     if(e) die("consumer lock");
     g = buffer[(pc->cindex)++ % pc->buf_size];
     e = pthread_mutex_unlock(&pc->cmutex); // fine accesso a zona comune
     if(e) die("consumer unlock");
-    e = sem_post(&pc->free_slots);
+    e = sem_post(pc->free_slots);
     if(e) die("consumer post");
     if(g.numBwt==0) break;
     else {

@@ -94,6 +94,7 @@ static sem_t *xsem_create_destroy(sem_t *s, unsigned int value, int line, const 
       sleep(Thread_error_wait);  // give some extra time to other threads 
       exit(1);
     }
+    free(s);
     return NULL;
   }
   // allocate init/ and return an unnamed sem_t

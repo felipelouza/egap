@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, time, argparse, subprocess, os.path, shutil, struct
+from psutil import virtual_memory
 
 Version = "v2.0"
 
@@ -49,6 +50,10 @@ POS_SIZE = 5    # must be equal to POS_SIZE in config.h
 
 
 def main():
+  # compute available memory in MB 
+  mem = virtual_memory().total  # total memory in bytes 
+  mem = int(0.95*mem/2**20)
+  # init commad line parser 
   parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('input', help='input file name(s)', type=str, nargs='+')
   #parser.add_argument('-m', '--mem', help='available memory in MB', type=int, required=True)
@@ -70,7 +75,7 @@ def main():
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
   requiredNamed = parser.add_argument_group('required named arguments')
-  requiredNamed.add_argument('-m', '--mem', help='memory assigned to the computation in MB', type=int, required=True)
+  requiredNamed.add_argument('-m', '--mem', help='RAM assigned to the computation in MB (%d available)' % mem, type=int, required=True)
   args = parser.parse_args()
   # ---- check number of input files and define basename
   check_input(args)

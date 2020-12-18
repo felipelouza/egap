@@ -3,7 +3,7 @@
 import sys, time, argparse, subprocess, os.path, shutil, struct
 from psutil import virtual_memory
 
-Version = "v2.0"
+Version = "v2.1"
 
 Description = """Tool to build the BWT and optionally the LCP and DA array for a collection 
 of sequences in external memory. There are two different usages depending 
@@ -50,13 +50,10 @@ POS_SIZE = 5    # must be equal to POS_SIZE in config.h
 
 
 def main():
-  # compute available memory in MB 
-  mem = virtual_memory().total  # total memory in bytes 
-  mem = int(0.95*mem/2**20)
   # init commad line parser 
   parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('input', help='input file name(s)', type=str, nargs='+')
-  #parser.add_argument('-m', '--mem', help='available memory in MB', type=int, required=True)
+  parser.add_argument('-m', '--mem', help='use at most M MBs (def. 95%% of available RAM)',default=-1, type=int)
   parser.add_argument('-o', '--out', help='output base name (def. input base name)', default="", type=str)  
   parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
   parser.add_argument('-l', '--lcp', help='compute LCP Array',action='store_true')
@@ -70,13 +67,18 @@ def main():
   parser.add_argument('--deB', help='compute info for building a deBruijn graph of order DEB', default=0, type=int)
   parser.add_argument('--sum', help='compute output files shasum',action='store_true')
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
-  parser.add_argument('--docs', help='stores the number of documents (ext: .docs), required for --bwt --da',action='store_true')
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
-  requiredNamed = parser.add_argument_group('required named arguments')
-  requiredNamed.add_argument('-m', '--mem', help='RAM assigned to the computation in MB (%d suggested)' % mem, type=int, required=True)
+  #requiredNamed = parser.add_argument_group('required named arguments')
+  #requiredNamed.add_argument('-m', '--mem', help='RAM assigned to the computation in MB (%d suggested)' % mem, type=int, required=True)
   args = parser.parse_args()
+  # if no max RAM provided on command line uses 95% of total 
+  if(args.mem<0):
+    mem = virtual_memory().total
+    args.mem = max(16,int(0.95*mem/2**20)) # avoid accidental 0 
+    print("Using {0} MBs of RAM".format(args.mem))
+     
   # ---- check number of input files and define basename
   check_input(args)
   # ---- create and open log file
@@ -84,11 +86,12 @@ def main():
   # get main eGap directory 
   args.egap_dir = os.path.split(sys.argv[0])[0]
   print("Sending logging messages to file:", logfile_name)
-  with open(logfile_name,"w") as logfile:  
+  with open(logfile_name,"a") as logfile:  
 
     print(">>> Begin computation",file=logfile)
     print(">>> eGap version " + Version,file=logfile)
     show_command_line(logfile)
+    print("Using {0} MBs of RAM".format(args.mem), file=logfile)
     logfile.flush()
 
     # ---- phase1: concatenate/compute BWTs
@@ -158,13 +161,7 @@ def main():
           os.remove("{f}.{n}.sa".format(f=args.basename,n=args.sbytes))
       except OSError as  e:                 
         # if failed, report it back to the user and stop
-        print ("Error: %s - %s." % (e.filename,e.strerror))      
-    if (args.docs == 0 and args.da):
-      try:
-        os.remove(args.basename+".docs")
-      except OSError as  e:                 
-        # if failed, report it back to the user and stop
-        print ("Error: %s - %s." % (e.filename,e.strerror))      
+        print ("Error: %s - %s." % (e.filename,e.strerror))
     print(">>> End test", file=logfile);
   return
 
@@ -246,25 +243,25 @@ def phase1(args,logfile, logfile_name):
       for name in args.input:
         with open(name,'rb') as fd:
           shutil.copyfileobj(fd, bwtfile, 1024*1024*10) # 10 MBs buffer
+    # if da requested we must have partial docs files: we concatenate them in a new .docs file
     if(args.da): 
       print("==== creating .docs file")    
       with open(args.basename+ ".docs","wb") as docsfile:
         for name in args.input:
-          filename = os.path.splitext(name)[0]+".docs".format(byts=args.dbytes)
-          print(filename)
+          filename = os.path.splitext(name)[0]+".docs"
           with open(filename,'rb') as fd:
             shutil.copyfileobj(fd, docsfile, 1024*1024*10) # 10 MBs buffer
-        print("==== creating .da_bl file")
+      # concatenate .da files in a single .da_bl file 
+      print("==== creating .da_bl file")
       with open(args.basename+".{byts}.da_bl".format(byts=args.dbytes),"wb") as dablfile:
         for name in args.input:
           filename = os.path.splitext(name)[0]+".{byts}.da".format(byts=args.dbytes)
-          print(filename)
           with open(filename,'rb') as fd:
             shutil.copyfileobj(fd, dablfile, 1024*1024*10) # 10 MBs buffer
     return True # everything fine
   else:        
     # ---- gSACAK    
-    # shall we use gsaka or gsaka64?
+    # We must compute BWTs. Shall we use gsaka or gsaka64?
     if args.mem//5 < 2020:    # less than 10GB: OK 32 bit 
       exe = os.path.join(args.egap_dir,gsacak_exe)
     elif args.mem//9 < 2020:  # less than 18GB: use 32bit with RAM = 10GB

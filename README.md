@@ -59,8 +59,8 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 
 ## Main command line options
 
-*-m, --mem*     
-  specify memory assigned to the algorithm in MB. This is a *mandatory* option. **Note:** do not assign all the available RAM to the algorithm: leave at least 5% to the operating system.
+*-m, --mem*
+  specify memory assigned to the algorithm in MB. Default is 95% of the available RAM
 
 *-o, --out*        
   specify basename for output and temporary files
@@ -77,10 +77,10 @@ All input and output files are uncompressed. The value 0 is used as the eof symb
 *--lbytes*      
   number of bytes for each LCP entry (def. 2)
 
-*-v*       
+*-v*
   verbose output in the log file
 
-*-h, --help*      
+*-h, --help*
   show usage
 
 
@@ -100,21 +100,20 @@ Use the options:
 *--sbytes*      
   number of bytes for each SA entry (def. 4)
 
-### Merging BWT files
+### Document array requirements
 
-In the case you want to **merge BWT files** and later compute the **Document Array**, you must provide DA and `file.docs` with the following option:
-
-*--da --docs*      
-  compute Document Array and output the number of documents into `file.docs` (required to use --bwt --da)
+If you want to simultaneaouly **merge BWT files** and compute the **Document Array** for each input BWT you must provide, in addition to the DA, also a `.docs` file for containing the number of documents in the file in 64 bits little endian format. The `.docs` file is automatically computed when the option *-d, --da* is used.
 
 **Example**
 
 ```sh
-./eGap -m 4096 dataset/file1.fastq -o file1 --da --docs
-./eGap -m 4096 dataset/file2.fastq -o file2 --da --docs
+./eGap -m 4096 dataset/file1.fastq -o file1 --da
+./eGap -m 4096 dataset/file2.fastq -o file2 --da
 
 ./eGap -m 4096 --bwt -o merge file1.bwt file2.bwt --da
 ```
+
+The first two commands compute `file1.bwt`, `file1.da`, `file1.docs` and `file2.bwt`, `file2.da`, `file2.docs` which are used by the third command to compute `merge.bwt`, `merge.da`, and `merge.docs`
 
 
 ## Truncated LCP values and de Bruijn graph info 
@@ -125,8 +124,8 @@ threshold *k*. Using the option *--trlcp k*, as an altenative to *--lcp*,
 the algorithm computes an LCP array in which all values greater than *k* are
 replaced by the value *k*.
 
-*--trlcp*
-  compute LCP values only up to TRLCP (truncated LCP)
+*--trlcp k*
+  truncate LCP values to the value *k*
 
 
 Another option offered by eGap, alternative to (truncated) LCP, 
@@ -138,8 +137,11 @@ the BOSS representation of the de Bruijn graph as described in the
 [Application](https://almob.biomedcentral.com/articles/10.1186/s13015-019-0140-0#Sec14)
 section of the [AMB paper](https://doi.org/10.1186/s13015-019-0140-0). 
 
-*--deB*      
-  compute info for order-DEB deBruijn graph
+*--deB K*
+  compute info for building the order-K deBruijn graph
+
+**Notice:** if the options *--trlcp* or *--deB* are used, suffixes are sorted only up the first *k* symbols so the resulting BWT *will not* be the standard one.
+
 
 
 ## Datasets

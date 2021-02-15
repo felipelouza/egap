@@ -152,7 +152,7 @@ int main(int argc, char** argv){
   
   // compute chuck size as a function of RAM 
   size_t chunk_size;
-  if(RAM) chunk_size = RAM/(sizeof(int_t)*arrays+1.0);
+  if(RAM) chunk_size = RAM/(sizeof(int_t)*arrays+1.0+ComputeQS);
   else chunk_size = WORD-1;
   printf("max(chunk) = %lu symbols\n", chunk_size);
   if(chunk_size>=WORD){

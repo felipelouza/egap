@@ -59,6 +59,7 @@ def main():
   parser.add_argument('-l', '--lcp', help='compute LCP Array',action='store_true')
   parser.add_argument('-d', '--da',  help='compute Document Array',action='store_true')
   parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
+  parser.add_argument('-q', '--qs', help='output (only for FASTQ) the quality score QS sequences permuted according to the BWT (ext: .qs)',action='store_true')
   parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
   parser.add_argument('--dbytes', help='bytes x DA entry (def. 4)', default=4, type=int)  
@@ -67,6 +68,9 @@ def main():
   parser.add_argument('--deB', help='compute info for building a deBruijn graph of order DEB', default=0, type=int)
   parser.add_argument('--sum', help='compute output files shasum',action='store_true')
   parser.add_argument('--delete', help='delete output files (only with --sum)',action='store_true')
+  parser.add_argument('--em', help='force external memory mode',action='store_true')
+  parser.add_argument('--se', help='force semi-external memory mode',action='store_true')
+  parser.add_argument('--im', help='force internal memory mode',action='store_true')
   parser.add_argument('-1', '--phase1', help='stop after phase 1 (debug only)',action='store_true')  
   parser.add_argument('-2', '--phase2', help='stop after phase 2 (debug only)',action='store_true')  
   parser.add_argument('-v',  help='verbose: extra info in the log file',action='store_true')
@@ -225,6 +229,11 @@ def check_input(args):
   if args.deB > 0 or args.trlcp > 0:
     print("!! Warning: options --deB/--trlcp k only consider the leading k symbols".format(args.deB))
     print("!!          of each suffix: the resulting BWT is not the standard one")
+  if args.qs:
+    ext = (args.input[0]).split(".")[-1]
+    if(ext != "fastq" and ext != "fq"):
+        print("You can use --qs only for FASTQ files")
+        sys.exit(1) 
 
 # phase1:
 # concatenation or computation of bwts 
@@ -277,6 +286,7 @@ def phase1(args,logfile, logfile_name):
     if(args.rev): options += "R"    # reverse string as input 
     if(args.sa):  options += " -s{byts}".format(byts = args.sbytes)    # output SA (ext: .sa)
     if(args.da):  options += " -d{byts}".format(byts = args.dbytes)    # output DA (ext: .da)
+    if(args.qs):  options += " -q"    # output QS (ext: .qs)
     command = "{exe} {opts} -m {mem} {output} {ifile} 0".format(exe=exe, 
               mem=args.mem, output=outopt, ifile=args.input[0], opts=options)
     # execute choosen algorithm           
@@ -289,11 +299,11 @@ def phase1(args,logfile, logfile_name):
 def phase2(args,logfile, logfile_name):
   print("--- Phase 2 ---",file=logfile); logfile.flush()
   bwt_size=os.path.getsize(args.basename + ".bwt")
-  if(bwt_size > args.mem*1024*1024 or args.deB > 0 or args.trlcp>0):
+  if(bwt_size > args.mem*1024*1024 or args.deB > 0 or args.trlcp>0 or args.em):
     # input larger than assigned ram, or dbgraph/truncated LCP: external algorithm 
     options = "-A128 -g128 -vaE"
     mode = "external memory"
-  elif 3 * bwt_size >  args.mem*1024*1024:
+  elif 3 * bwt_size >  args.mem*1024*1024 or args.se:
     # input fits in ram but not too small: semi-external algorithm
     options = "-A8 -g8 -vaE"
     mode = "semi-external memory"
@@ -306,6 +316,7 @@ def phase2(args,logfile, logfile_name):
   if(args.lcp or args.trlcp>0): options += "l"  # generate (truncated) lcp
   if(args.da): options += " -d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
   if(args.sa): options += " -S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
+  if(args.qs):  options += " -q"    # output QS (ext: .qs)
   if(args.deB>0): options += " -D{k}".format(k = args.deB)      # info for order-k de Brujin graph
   if(args.trlcp>0): options += " -D{k}".format(k = args.trlcp)  # info for truncated LCP
   command = "{exe}{byts} {opts} {ibase}".format(exe=exe, 

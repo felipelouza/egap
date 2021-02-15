@@ -34,6 +34,8 @@ char** file_load_multiple(char* c_file, int k, size_t* n) ;
 char** file_load_multiple_chunks(char* c_file, int_t k, size_t* n, FILE *f_in);
 int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t* chunks, size_t* n, FILE *f_in, ssize_t **pos);
 
+char** file_load_multiple_qs_chunks(char* c_file, int_t k, FILE *f_in);
+
 unsigned char** file_load_concat(char* c_file, char *len_file, int k, int_t *n);
 /*******************************************************************/
 

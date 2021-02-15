@@ -394,6 +394,63 @@ char** load_multiple_fastq(FILE* f_in, int_t k, size_t *n){
   return c_buffer;
 }
 
+/*******************************************************************/
+
+// read sequences separeted by '@' line
+char** load_multiple_qs(FILE* f_in, int_t k){
+
+  char **c_buffer = (char**) malloc(k*sizeof(char*));
+
+  int_t i;
+  for(i=0; i<k; i++){
+    size_t len = 0;
+    char *buf = NULL;
+
+    ssize_t size = getline(&buf, &len, f_in); // @'s line
+    //printf("Line of size: %d\n", strlen(buf));
+    free(buf);buf = NULL;
+    if (size <= 1) return 0;
+
+    buf = NULL; len = 0;  
+    size = getline(&buf, &len, f_in); // read line
+    // printf("Line of size: %d\n", strlen(buf));
+    free(buf);
+    buf = NULL; len = 0;  
+    size = getline(&buf, &len, f_in); // +'s line
+    //printf("Line of size: %d\n", strlen(buf));
+    free(buf);buf = NULL;
+    //printf("Line %d OK\n", i);
+    // free(buf);
+
+    c_buffer[i] = NULL; len=0;
+    size = getline(&c_buffer[i], &len, f_in); // read line
+    //printf("Line of size: %d\n", strlen(c_buffer[i]));
+    c_buffer[i][size-1] = 0;
+  }
+  return c_buffer;
+}
+
+char** file_load_multiple_qs_chunks(char* c_file, int_t k, FILE *f_in) {
+
+/* .ext
+ * .fastq - strings separated by four lines
+ */
+
+  const char *type = get_filename_ext(c_file);
+  char **c_buffer = NULL; // = (char**) malloc(k*sizeof(char*));
+
+  if(strcmp(type,"fastq") == 0 || strcmp(type,"fq") == 0)
+    c_buffer = load_multiple_qs(f_in, k);
+  else{
+    printf("Error: file not recognized (.fastq or .fq)\n");
+    exit (EXIT_FAILURE);
+  }
+
+return c_buffer;
+}
+
+/*******************************************************************/
+
 // read sequences separeted by '>' line
 char** load_multiple_fasta(FILE* f_in, int_t k, size_t *n){
 

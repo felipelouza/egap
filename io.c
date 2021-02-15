@@ -67,6 +67,38 @@ void close_sa_files(g_data *g) {
 /******************************************************************************/
 
 // open a file for each input BWT, file pointers are stored to bwf[] 
+void open_qs_files(g_data *g) {
+  assert(g->extMem);
+  g->qsf = malloc(g->numBwt*sizeof(FILE *));
+  if(g->qsf==NULL) die(__func__);
+  for(int i=0; i< g->numBwt; i++) {
+    g->qsf[i] = fopen(g->qsfname,"r");
+    if(!g->qsf[i]) die(__func__);
+  }
+}
+
+// use bws[] to make qsf[i] point at the beginning of qs[i]  
+void rewind_qs_files(g_data *g) {
+  assert(g->extMem);
+  for(int i=0; i< g->numBwt; i++) {
+    int e = fseek(g->qsf[i],(g->outputQS)*(g->bws[i]-g->bws[0]+g->symb_offset),SEEK_SET);
+    if(e!=0) die(__func__);
+  }
+}
+
+// close qsf[i] files  
+void close_qs_files(g_data *g) {
+  assert(g->extMem);
+  for(int i=0; i< g->numBwt; i++) {
+    int e = fclose(g->qsf[i]);
+    if(e!=0) die(__func__);
+  }
+  free(g->qsf);
+}
+
+/******************************************************************************/
+
+// open a file for each input BWT, file pointers are stored to bwf[] 
 void open_da_files(g_data *g) {
   assert(g->extMem);
   g->daf = malloc(g->numBwt*sizeof(FILE *));

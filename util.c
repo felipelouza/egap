@@ -68,6 +68,14 @@ bool readBWTsingle(char *path, g_data *g)
       if(rename(tmp1,tmp2)!=0)
         die("Cannot rename DA file");
     }
+    if(g->outputQS) { // if there is a single (multi)-bwt the QS does not change
+      char tmp1[Filename_size];
+      char tmp2[Filename_size];
+      snprintf(tmp1,Filename_size,"%s.%s",path,QS_BL_EXT);
+      snprintf(tmp2,Filename_size,"%s.%s",path,QS_EXT);
+      if(rename(tmp1,tmp2)!=0)
+        die("Cannot rename QS file");
+    }
     size_t size;
     size_t r = fread(&size, 8, 1, f);// sizes are stored in 64 bits 
     if(r!=1) die(__func__);
@@ -288,6 +296,18 @@ static FILE *openSAFile(g_data *g)
   return f;
 }
 
+static FILE *openQSFile(g_data *g)
+{
+  char filename[Filename_size];
+
+  if(g->verbose>1) puts("Writing QS");
+  assert(g->outputQS);
+  snprintf(filename,Filename_size,"%s.%s",g->outPath,QS_EXT);
+  FILE *f = fopen(filename,"wb");
+  if(f==NULL) die("Error opening QS file");
+  return f;
+}
+
 // use g->mergeColor to merge bwt (and LCP) values 
 // used by gap gap16 and hm
 void mergeBWTandLCP(g_data *g, bool lastRound)
@@ -377,12 +397,15 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   assert(!g->lcpMerge && g->extMem && g->numBwt<=128);
   FILE *daOutFile=NULL;
   FILE *saOutFile=NULL;
+  FILE *qsOutFile=NULL;
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
   if(g->outputSA && lastRound)
     saOutFile = openSAFile(g);
   if(g->outputDA && lastRound)
     daOutFile = openDAFile(g);  
+  if(g->outputQS && lastRound)
+    qsOutFile = openQSFile(g);
 
   open_bw_files(g);     // open files in read mode
   rewind_bw_files(g);   // set file pointers at the beginning of each BWT
@@ -396,6 +419,11 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     snprintf(g->dafname,Filename_size,"%s.%d.%s",g->outPath,g->outputDA, DA_BL_EXT);
     open_da_files(g);
     rewind_da_files(g);   // set file pointers at the beginning of each DA
+  }
+  if(g->outputQS && lastRound){
+    snprintf(g->qsfname,Filename_size,"%s.%s",g->outPath, QS_BL_EXT);
+    open_qs_files(g);
+    rewind_qs_files(g);   // set file pointers at the beginning of each DA
   }
 
   // mmap merge values so we can read/write simultaneously 
@@ -430,6 +458,13 @@ void mergeBWT128ext(g_data *g, bool lastRound)
         die("mergeBWT128ext: Error writing to Document Array file");   
       //printf("%d ==> %d\n", currentColor, da_value);
     } 
+    if(g->outputQS && lastRound){ 
+      int qs_value=0;
+      int e = fread(&qs_value, 1, 1, g->qsf[currentColor]);
+      if(e!=1) die(__func__);
+      if(fwrite(&qs_value, 1, 1, qsOutFile)==EOF)
+        die("mergeBWT128ext: Error writing to QS file");   
+    } 
     // save new BWT char overwriting mergeColor[i]
     int e = fread(bwtout+i,sizeof(symbol),1,g->bwf[currentColor]);
     if(e!=1) die(__func__);
@@ -439,6 +474,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   close_bw_files(g);
   if(g->outputSA  && lastRound) close_sa_files(g);
   if(g->outputDA  && lastRound) close_da_files(g);
+  if(g->outputQS  && lastRound) close_qs_files(g);
   // final check on the merging 
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
 
@@ -460,6 +496,11 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   if(g->outputDA && lastRound){
     if(fclose(daOutFile)!=0) die("mergeBWT128ext: Error closing Document Array file");   
     remove(g->dafname);
+  }
+  // close QS file 
+  if(g->outputQS && lastRound){
+    if(fclose(qsOutFile)!=0) die("mergeBWT128ext: Error closing QS file");   
+    remove(g->qsfname);
   }
 }
 
@@ -519,6 +560,7 @@ void mergeBWT8(g_data *g, bool lastRound)
   assert(!g->lcpMerge);
   FILE *daOutFile=NULL;
   FILE *saOutFile=NULL;
+  FILE *qsOutFile=NULL;
 
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0); // clear counter inside each bwt
@@ -526,13 +568,19 @@ void mergeBWT8(g_data *g, bool lastRound)
     saOutFile = openSAFile(g);    
     snprintf(g->safname,Filename_size,"%s.%d.%s",g->outPath,g->outputSA, SA_BL_EXT);
     open_sa_files(g);
-    rewind_sa_files(g);   // set file pointers at the beginning of each DA
+    rewind_sa_files(g);   // set file pointers at the beginning of each SA
   }
   if(g->outputDA && lastRound){
     daOutFile = openDAFile(g);    
     snprintf(g->dafname,Filename_size,"%s.%d.%s",g->outPath,g->outputDA, DA_BL_EXT);
     open_da_files(g);
     rewind_da_files(g);   // set file pointers at the beginning of each DA
+  }
+  if(g->outputQS && lastRound){
+    qsOutFile = openQSFile(g);    
+    snprintf(g->qsfname,Filename_size,"%s.%s",g->outPath,QS_BL_EXT);
+    open_qs_files(g);
+    rewind_qs_files(g);   // set file pointers at the beginning of each QS
   }
   if(g->extMem) {
     open_bw_files(g);     // open files in read/write mode
@@ -564,6 +612,13 @@ void mergeBWT8(g_data *g, bool lastRound)
         die("mergeBWT128ext: Error writing to Document Array file");   
       //printf("%d ==> %d\n", currentColor, da_value);
     } 
+    if(g->outputQS && lastRound){ 
+      int qs_value=0;
+      int e = fread(&qs_value, 1, 1, g->qsf[currentColor]);
+      if(e!=1) die(__func__);
+      if(fwrite(&qs_value, 1, 1, qsOutFile)==EOF)
+        die("mergeBWT128ext: Error writing to QS file");   
+    } 
     // save new BWT char overwriting mergeColor[i]
     if(g->extMem) {
       int e = fread(bwtout+i,sizeof(symbol),1,g->bwf[currentColor]);
@@ -576,7 +631,7 @@ void mergeBWT8(g_data *g, bool lastRound)
   // final check on the merging 
   for(int i=0;i<g->numBwt;i++) assert(g->inCnt[i]==g->bwtLen[i]);
   if(g->extMem) close_bw_files(g);
-  // close document array file 
+  // close suffix array file 
   if(g->outputSA && lastRound){
     if(fclose(saOutFile)!=0) die("mergeBWT8: Error closing Suffix Array file");       
     remove(g->safname);
@@ -585,6 +640,11 @@ void mergeBWT8(g_data *g, bool lastRound)
   if(g->outputDA && lastRound){
     if(fclose(daOutFile)!=0) die("mergeBWT8: Error closing Document Array file");       
     remove(g->dafname);
+  }
+  // close suffix array file 
+  if(g->outputQS && lastRound){
+    if(fclose(qsOutFile)!=0) die("mergeBWT8: Error closing QS file");       
+    remove(g->qsfname);
   }
 
   // merging done: copy back to g->bws[0] or to file

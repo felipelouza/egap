@@ -116,7 +116,9 @@ If you want to simultaneaouly **merge BWT files** and compute the **Document Arr
 The first two commands compute `file1.bwt`, `file1.da`, `file1.docs` and `file2.bwt`, `file2.da`, `file2.docs` which are used by the third command to compute `merge.bwt`, `merge.da`, and `merge.docs`
 
 
-## Truncated LCP values and de Bruijn graph info 
+## Applications
+
+### Truncated LCP values
 
 The running time of eGap can be decreased if, instead of the true 
 LCP values, the user settles for computing the LCP values up to a certain 
@@ -127,10 +129,11 @@ replaced by the value *k*.
 *--trlcp k*
   truncate LCP values to the value *k*
 
+### Bruijn graph info (BOSS)
 
-Another option offered by eGap, alternative to (truncated) LCP, 
-is to compute the info required for the construction of the succinct (BOSS)
-representation of the de Bruijn graph associated to the input sequences. 
+Another option offered by eGap, is to compute the info required for the
+construction of the succinct (BOSS) representation of the de Bruijn graph
+associated to the input sequences. 
 Using the option *--deB k* eGap compute two bitfiles with extension 
 .lcpbit0 and .lcpbit1 which, together with the BWT, can be used to compute 
 the BOSS representation of the de Bruijn graph as described in the 
@@ -142,7 +145,20 @@ section of the [AMB paper](https://doi.org/10.1186/s13015-019-0140-0).
 
 **Notice:** if the options *--trlcp* or *--deB* are used, suffixes are sorted only up the first *k* symbols so the resulting BWT *will not* be the standard one.
 
+### Quality score (QS) sequences
 
+eGap can output the Quality Score (QS) sequences of a FASTQ file permuted according to the BWT symbols (allowed only for `.fastq` files).
+
+*--qs*
+  QS permuted according to the BWT
+
+**Example**
+
+```sh
+./eGap -m 4096 dataset/reads.fastq -o file1 --qs
+```
+
+The output files are `file1.bwt`, `file1.bwt.qs`, and `file1.eGap.log`
 
 ## Datasets
 

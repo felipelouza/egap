@@ -35,6 +35,7 @@ void usage(char *name, g_data *g){
   puts("\t-l    compute lcp values");
   puts("\t-d D  create document array using D bytes per entry, ext: ."DA_EXT);
   puts("\t-S S  create suffix array using S bytes per entry, ext: ."SA_EXT);
+  puts("\t-q    (only for fastq) create QS permuted according to the BWT, ext: ."QS_EXT);
   puts("\t-x    compute lcp without external mergesort");
   puts("\t-a    assume alphabet is small");   
   printf("\t-g G  max # BWTs merged simultaneously (def %llu)\n", MAX_NUMBER_OF_BWTS);   
@@ -68,9 +69,10 @@ int main(int argc, char *argv[]) {
   g.extMem = g.smallAlpha=g.mmapZ=g.mmapBWT=g.mmapB= g.lcpMerge = g.lcpCompute = false;
   g.outputDA = 0;
   g.outputSA = 0;
+  g.outputQS = 0;
   g.dbOrder = 0;           // order for deBruijn graph 
   int num_threads = 0;
-  while ((c=getopt(argc, argv, "vhalrxmd:p:g:A:s:o:EZTBD:S:")) != -1) {
+  while ((c=getopt(argc, argv, "vhalrxmd:p:g:A:s:o:EZTBD:S:q")) != -1) {
     switch (c) 
       {
       case 'v':
@@ -89,6 +91,8 @@ int main(int argc, char *argv[]) {
         g.outputDA = atoi(optarg); break;  // output Document Array (for last iteration only) 
       case 'S':
         g.outputSA = atoi(optarg); break;  // output Suffix Array (for last iteration only) 
+      case 'q':
+        g.outputQS = true; break;  // output Suffix Array (for last iteration only) 
       case 'm':
         hm=true; break;                 // use hm algorithm 
       case 'a':

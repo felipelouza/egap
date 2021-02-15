@@ -17,6 +17,10 @@ void open_da_files(g_data *g);
 void rewind_da_files(g_data *g);
 void close_da_files(g_data *g);
 
+void open_qs_files(g_data *g);
+void rewind_qs_files(g_data *g);
+void close_qs_files(g_data *g);
+
 FILE *gap_tmpfile(char* path);
 void huge_pwrite(int fd, const void *buf, size_t count, off_t offset);
 void huge_pread(int fd, void *buf, size_t count, off_t offset);

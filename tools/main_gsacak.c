@@ -46,6 +46,7 @@ void usage(char *name){
   puts("\t-l      compute LCP array as well (use only with option -s)");
   puts("\t-c      check SA and LCP");
   puts("\t-s      output SA (ext: .sa) and possibly LCP (ext: .sa_lcp)");
+  puts("\t-q      output QS sequences permuted according to the BWT (ext: .qs)");
   puts("\t-b      output BWT (ext: .bwt)");
   puts("\t-r      output RLE(BWT) (ext: .rle.bwt)");
   puts("\t-g D    output LCP in gap format D bytes per entry (ext: .D.lcp)");
@@ -66,19 +67,21 @@ int main(int argc, char** argv){
   extern int optind, opterr, optopt;
   
   // parse command line
-  int VALIDATE=0, OutputSA=0, LCP_COMPUTE=0, DA_COMPUTE=0;
+  int VALIDATE=0, OutputSA=0, LCP_COMPUTE=0, DA_COMPUTE=0, ComputeQS=0;
   int_t k=0;
   int Verbose=0, OutputGapLcp=0, OutputBwt=0, OutputDA=0, Extract=0, Reversed=0, c; // len_file=0;
   char *c_file=NULL, *outfile=NULL;
   size_t RAM=0;
 
-  while ((c=getopt(argc, argv, "cs:lvXbrg:hm:o:Rd:")) != -1) {
+  while ((c=getopt(argc, argv, "cs:lvXbrg:hm:o:Rd:q")) != -1) {
     switch (c) 
       {
       case 'c':
         VALIDATE=1; break;          // validate output
       case 's':
         OutputSA=atoi(optarg); break;   // output SA 
+      case 'q':
+        ComputeQS=1; break;         // output QS
       case 'l':
         LCP_COMPUTE=1;  break;      // compute LCP 
       case 'v':
@@ -187,7 +190,7 @@ int main(int argc, char** argv){
   }
 
   // files used for multi BWT, LCP and their lengths 
-  FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL, *f_da = NULL, *f_sa = NULL;
+  FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL, *f_da = NULL, *f_sa = NULL, *f_qs = NULL;
   FILE *f_size = NULL; //size of each chunk
   FILE *f_docs = NULL; //number of documents in each chunk
 
@@ -228,6 +231,12 @@ int main(int argc, char** argv){
     f_sa = file_open(s, "wb");
   }
 
+  if(ComputeQS) {
+    char s[500]; 
+    snprintf(s,500,"%s.bwt.qs_bl",outfile); 
+    f_qs = file_open(s, "wb");
+  }
+
   size_t curr=0;
   size_t sum=0;
   // processing of individual chunks 
@@ -245,11 +254,11 @@ int main(int argc, char** argv){
     fseek(f_in, pos[bl], SEEK_SET);
 
     R = (unsigned char**) file_load_multiple_chunks(c_file, K[bl], &len, f_in);
-   
     if(!R){
       fprintf(stderr, "Error: less than %" PRIdN " strings in %s\n", K[bl], c_file);
       return 0;
     }
+
     // now R[0] ... R[K[bl]-1] contains the input documents  
     if(Verbose)
       printf("%" PRIdN "\t%" PRIdN "\t(%lu)\t%zu\n", bl, K[bl], len, pos[bl]);
@@ -375,12 +384,6 @@ int main(int argc, char** argv){
       file_write_array(f_da, DA+1, len-1, OutputDA);//ignore the first DA-value
     }
 
-    // output SA alone
-    if(OutputSA){
-      for(i=0; i<len; i++) SA[i]+=sum;
-      file_write_array(f_sa, SA+1, len-1, OutputSA);//ignore the first SA-value
-    }
-
     if(Verbose>2) {
       if(LCP_COMPUTE) lcp_array_print((unsigned char*)str, SA, LCP, min(20,len), sizeof(char)); 
       else suffix_array_print((unsigned char*)str, SA, min(10,len), sizeof(char));
@@ -396,6 +399,36 @@ int main(int argc, char** argv){
       }
     }
   
+    free(str);
+
+    if(ComputeQS){
+      fseek(f_in, pos[bl], SEEK_SET);
+      unsigned char **QS = (unsigned char**) file_load_multiple_qs_chunks(c_file, K[bl], f_in);
+
+      len--;
+      str = cat_char(QS, K[bl], &len);
+
+      int c; int_t i;
+      for(i=1; i<len; i++) {
+        //if(i==0) assert(SA[i]==len-1);
+        //else {
+          c = (!SA[i])?'#':((str[SA[i]-1]>1)?str[SA[i]-1]-1:'#');
+          int err = fputc(c,f_qs);
+          if(err==EOF) die(__func__);
+        //}
+      }
+
+      //free memory
+      for(i=0; i<K[bl]; i++) free(QS[i]);
+      free(QS);
+    }
+   
+    // output SA alone
+    if(OutputSA){
+      for(i=0; i<len; i++) SA[i]+=sum;
+      file_write_array(f_sa, SA+1, len-1, OutputSA);//ignore the first SA-value
+    }
+
     // output SA alone or SA&LCP together
     /*
     if(OutputSA){
@@ -426,7 +459,6 @@ int main(int argc, char** argv){
     free(SA);
     if(LCP_COMPUTE) free(LCP);
     if(DA_COMPUTE) free(DA);
-    free(str);
     
     curr+=K[bl];
     sum+=len-1;
@@ -461,6 +493,10 @@ int main(int argc, char** argv){
 
   if(OutputSA){
     fclose(f_sa);
+  }
+
+  if(ComputeQS){
+    fclose(f_qs);
   }
 
   return 0;

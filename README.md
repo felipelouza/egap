@@ -145,8 +145,6 @@ section of the [AMB paper](https://doi.org/10.1186/s13015-019-0140-0).
 
 **Notice:** if the options *--trlcp* or *--deB* are used, suffixes are sorted only up the first *k* symbols so the resulting BWT *will not* be the standard one.
 
-## Others
-
 ### Quality score (QS) sequences
 
 eGap can output the Quality Scores (QS) of a FASTQ file permuted according to the BWT of the DNA bases (allowed only for `.fastq` files).

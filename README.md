@@ -145,20 +145,19 @@ section of the [AMB paper](https://doi.org/10.1186/s13015-019-0140-0).
 
 **Notice:** if the options *--trlcp* or *--deB* are used, suffixes are sorted only up the first *k* symbols so the resulting BWT *will not* be the standard one.
 
+## Others
+
 ### Quality score (QS) sequences
 
-eGap can output the Quality Score (QS) sequences of a FASTQ file permuted according to the BWT symbols (allowed only for `.fastq` files).
+eGap can output the Quality Scores (QS) of a FASTQ file permuted according to the BWT of the DNA bases (allowed only for `.fastq` files).
 
 *--qs*
-  QS permuted according to the BWT
+  QS permuted according to the BWT (output file `.bwt.qs`)
 
-**Example**
+For example:
+  `   eGap -m 4096 file.fastq --qs` 
+will produce the output files: *file.fastq.bwt*, *file.fastq.bwt.qs*
 
-```sh
-./eGap -m 4096 dataset/reads.fastq -o file1 --qs
-```
-
-The output files are `file1.bwt`, `file1.bwt.qs`, and `file1.eGap.log`
 
 ## Datasets
 

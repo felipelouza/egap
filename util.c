@@ -459,10 +459,10 @@ void mergeBWT128ext(g_data *g, bool lastRound)
       //printf("%d ==> %d\n", currentColor, da_value);
     } 
     if(g->outputQS && lastRound){ 
-      int qs_value=0;
-      int e = fread(&qs_value, 1, 1, g->qsf[currentColor]);
+      symbol qs_value=0;
+      int e = fread(&qs_value, sizeof(symbol), 1, g->qsf[currentColor]);
       if(e!=1) die(__func__);
-      if(fwrite(&qs_value, 1, 1, qsOutFile)==EOF)
+      if(fwrite(&qs_value, sizeof(symbol), 1, qsOutFile)==EOF)
         die("mergeBWT128ext: Error writing to QS file");   
     } 
     // save new BWT char overwriting mergeColor[i]
@@ -613,10 +613,10 @@ void mergeBWT8(g_data *g, bool lastRound)
       //printf("%d ==> %d\n", currentColor, da_value);
     } 
     if(g->outputQS && lastRound){ 
-      int qs_value=0;
-      int e = fread(&qs_value, 1, 1, g->qsf[currentColor]);
+      symbol qs_value=0;
+      int e = fread(&qs_value, sizeof(symbol), 1, g->qsf[currentColor]);
       if(e!=1) die(__func__);
-      if(fwrite(&qs_value, 1, 1, qsOutFile)==EOF)
+      if(fwrite(&qs_value, sizeof(symbol), 1, qsOutFile)==EOF)
         die("mergeBWT128ext: Error writing to QS file");   
     } 
     // save new BWT char overwriting mergeColor[i]

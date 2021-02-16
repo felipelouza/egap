@@ -81,7 +81,7 @@ void open_qs_files(g_data *g) {
 void rewind_qs_files(g_data *g) {
   assert(g->extMem);
   for(int i=0; i< g->numBwt; i++) {
-    int e = fseek(g->qsf[i],(g->outputQS)*(g->bws[i]-g->bws[0]+g->symb_offset),SEEK_SET);
+    int e = fseek(g->qsf[i],sizeof(symbol)*(g->bws[i]-g->bws[0]+g->symb_offset),SEEK_SET);
     if(e!=0) die(__func__);
   }
 }

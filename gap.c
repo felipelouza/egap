@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
       case 'S':
         g.outputSA = atoi(optarg); break;  // output Suffix Array (for last iteration only) 
       case 'q':
-        g.outputQS = true; break;  // output Suffix Array (for last iteration only) 
+        g.outputQS = 1; break;  // output QS permuted according to the BWT (for last iteration only) 
       case 'm':
         hm=true; break;                 // use hm algorithm 
       case 'a':
@@ -217,8 +217,14 @@ int main(int argc, char *argv[]) {
   bool something_to_do = readBWTsingle(path, &g);
   
   if(g.numBwt> group_size) { // multiround computation required
-    if(g.outputDA>0 || g.outputSA>0) {
-      puts("Sorry, multiround DA or SA computation not supported");
+    if(g.outputDA>0 || g.outputSA>0 || g.outputQS>0) {
+      puts("Sorry, multiround DA, SA or QS computation not supported");
+      exit(EXIT_FAILURE);
+    }
+  }
+  if(g.mmapBWT) { 
+    if(g.outputDA>0 || g.outputSA>0 || g.outputQS>0) {
+      puts("Sorry, internal memory DA, SA or QS computation not supported");
       exit(EXIT_FAILURE);
     }
   }

@@ -299,11 +299,11 @@ def phase1(args,logfile, logfile_name):
 def phase2(args,logfile, logfile_name):
   print("--- Phase 2 ---",file=logfile); logfile.flush()
   bwt_size=os.path.getsize(args.basename + ".bwt")
-  if(bwt_size > args.mem*1024*1024 or args.deB > 0 or args.trlcp>0 or args.em):
+  if((bwt_size > args.mem*1024*1024 or args.deB > 0 or args.trlcp>0 or args.em) and (not args.se and not args.im) ):
     # input larger than assigned ram, or dbgraph/truncated LCP: external algorithm 
     options = "-A128 -g128 -vaE"
     mode = "external memory"
-  elif 3 * bwt_size >  args.mem*1024*1024 or args.se:
+  elif ((3 * bwt_size >  args.mem*1024*1024 or args.se) and (not args.im)):
     # input fits in ram but not too small: semi-external algorithm
     options = "-A8 -g8 -vaE"
     mode = "semi-external memory"

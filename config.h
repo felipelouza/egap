@@ -139,7 +139,7 @@ typedef struct {
   int dbOrder;             // if > 1 output info useful for order-k dbGraph construction (only with -A 128) 
   int outputDA;            // if > 0 output Merge array (=Document Array) for last iteration using outputDA bytes per symbol
   int outputSA;            // if > 0 output Merge array (=Suffix Array) for last iteration using outputSA bytes per symbol
-  bool outputQS;            // if true output Merge array (=QS) for last iteration using 1 bytes per symbol
+  int outputQS;            // if 1 output Merge array (=QS) for last iteration using 1 bytes per symbol
   FILE *unsortedLcp;       // if !NULL file containing unsorted LCP values
   FILE *unsortedLcp_size;  // if !NULL file containing the size of sorted blocks in unsorted_Lcp
   bool smallAlpha;         // the alphabet is small

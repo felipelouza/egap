@@ -412,7 +412,7 @@ int main(int argc, char** argv){
       for(i=1; i<len; i++) {
         //if(i==0) assert(SA[i]==len-1);
         //else {
-          c = (!SA[i])?'#':((str[SA[i]-1]>1)?str[SA[i]-1]-1:'#');
+          c = (!SA[i])?0:((str[SA[i]-1]>1)?str[SA[i]-1]-1:0);
           int err = fputc(c,f_qs);
           if(err==EOF) die(__func__);
         //}

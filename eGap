@@ -19,7 +19,7 @@ Globbing works: multiple files can be denoted for example by file*.bwt
 If you don't have the BWTs then your input must consists of a single file
 with extension 
   .fasta/.fa (one input document per sequence)
-  .fastq     (one input document per sequence)
+  .fastq/.fq (one input document per sequence)
   .txt       (one input document per line)
 and it is not mandatory to specify the output basename. For example:
   {exe} -l  file.fasta 

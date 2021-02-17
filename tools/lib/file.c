@@ -533,11 +533,11 @@ int_t* file_count_multiple(char* c_file, int_t *k, uint_t chunk_size, int_t *chu
   else if(strcmp(type,"fasta") == 0 || strcmp(type,"fa")==0 )
     K = count_multiple_fasta(f_in, k, chunk_size, n, chunks, pos);
 
-  else if(strcmp(type,"fastq") == 0)
+  else if(strcmp(type,"fastq") == 0 || strcmp(type,"fq")==0 )
     K = count_multiple_fastq(f_in, k, chunk_size, n, chunks, pos);
 
   else{
-    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq)\n");
+    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq, .fq)\n");
     exit(EXIT_FAILURE);
   }
 
@@ -566,11 +566,11 @@ char** file_load_multiple_chunks(char* c_file, int_t k, size_t *n, FILE *f_in) {
   else if(strcmp(type,"fasta") == 0 || strcmp(type,"fa")==0 )
     c_buffer = load_multiple_fasta(f_in, k, n);
 
-  else if(strcmp(type,"fastq") == 0)
+  else if(strcmp(type,"fastq") == 0 || strcmp(type,"fq")==0 )
     c_buffer = load_multiple_fastq(f_in, k, n);
 
   else{
-    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq)\n");
+    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq, .fq)\n");
     exit(EXIT_FAILURE);
   }
 
@@ -598,10 +598,10 @@ char** file_load_multiple(char* c_file, int k, size_t *n) {
   else if(strcmp(type,"fasta") == 0 || strcmp(type,"fa")==0 )
     c_buffer = load_multiple_fasta(f_in, k, n);
 
-  else if(strcmp(type,"fastq") == 0)
+  else if(strcmp(type,"fastq") == 0 || strcmp(type,"fq")==0 )
     c_buffer = load_multiple_fastq(f_in, k, n);
   else{
-    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq)\n");
+    printf("Error: file not recognized (.txt, .fa, .fasta, .fastq, .fq)\n");
     exit(EXIT_FAILURE);
   }
 

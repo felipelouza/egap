@@ -150,6 +150,8 @@ int main(int argc, char** argv){
   if(LCP_COMPUTE) arrays++;
   if(DA_COMPUTE) arrays++;
   
+  printf("==> RAM = %zu\n", RAM);
+
   // compute chuck size as a function of RAM 
   size_t chunk_size;
   if(RAM) chunk_size = RAM/(sizeof(int_t)*arrays+1.0+ComputeQS);

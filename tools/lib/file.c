@@ -1,5 +1,7 @@
 #include "file.h"
 
+#define N_ALLOC 2048 
+
 /* Returns the file extension
  */
 const char *get_filename_ext(const char *filename) {                                                  
@@ -122,7 +124,7 @@ int_t* count_multiple_txt(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, in
   
   size_t sum=0;
 
-  int nalloc = 128;
+  int nalloc = N_ALLOC;
   int_t *K = (int_t*) malloc(nalloc*sizeof(int_t));
   (*pos) = (ssize_t*) malloc((nalloc+1)*sizeof(ssize_t));
 
@@ -157,7 +159,7 @@ int_t* count_multiple_txt(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, in
       sum = size; d=1;
 
       if((*chunks) > nalloc){
-        nalloc += 128;
+        nalloc += N_ALLOC;
         K = realloc(K, sizeof(int_t) * nalloc);
         (*pos) = realloc((*pos), sizeof(ssize_t) * (nalloc+1));
       }
@@ -180,7 +182,7 @@ int_t* count_multiple_fastq(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
   if((*k)==0) (*k)=I_MAX;
   size_t sum=0;
 
-  int nalloc = 128;
+  int nalloc = N_ALLOC;
   int_t *K = (int_t*) malloc(nalloc*sizeof(int_t));
   (*pos) = (ssize_t*) malloc((nalloc+1)*sizeof(ssize_t));
     
@@ -221,7 +223,7 @@ int_t* count_multiple_fastq(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
       sum = size; d=1;
 
       if((*chunks) > nalloc){
-        nalloc += 128;
+        nalloc += N_ALLOC;
         K = realloc(K, sizeof(int_t) * nalloc);
         (*pos) = realloc((*pos), sizeof(ssize_t) * (nalloc+1));
       }
@@ -255,7 +257,7 @@ int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
   size_t sum=0;
   ssize_t size=0;
 
-  int nalloc = 128;
+  int nalloc = N_ALLOC;
   int_t *K = (int_t*) malloc(nalloc*sizeof(int_t));
   (*pos) = (ssize_t*) malloc((nalloc+1)*sizeof(ssize_t));
 
@@ -315,7 +317,7 @@ int_t* count_multiple_fasta(FILE* f_in, int_t *k, uint_t chunk_size, size_t *n, 
       sum = size; d=1;
 
       if((*chunks) > nalloc){
-        nalloc += 128;
+        nalloc += N_ALLOC;
         K = realloc(K, sizeof(int_t) * nalloc);
         (*pos) = realloc((*pos), sizeof(ssize_t) * (nalloc+1));
       }
@@ -473,7 +475,7 @@ char** load_multiple_fasta(FILE* f_in, int_t k, size_t *n){
     if(i!=count) return 0;
 
     len = 0;
-    size_t nalloc = 128;
+    size_t nalloc = N_ALLOC;
     c_buffer[i] = malloc(nalloc*sizeof(char));
 
     size_t p=0;
@@ -486,7 +488,7 @@ char** load_multiple_fasta(FILE* f_in, int_t k, size_t *n){
       }
 
       if(p+len>nalloc){
-        nalloc += len+128;
+        nalloc += len+N_ALLOC;
         c_buffer[i] = realloc(c_buffer[i], sizeof(char) * nalloc);
       }
 

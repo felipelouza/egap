@@ -68,11 +68,12 @@ int main(int argc, char *argv[]) {
   g.algorithm = 0;
   g.extMem = g.smallAlpha=g.mmapZ=g.mmapBWT=g.mmapB= g.lcpMerge = g.lcpCompute = false;
   g.outputDA = 0;
+  g.outputColors = 0;
   g.outputSA = 0;
   g.outputQS = 0;
   g.dbOrder = 0;           // order for deBruijn graph 
   int num_threads = 0;
-  while ((c=getopt(argc, argv, "vhalrxmd:p:g:A:s:o:EZTBD:S:q")) != -1) {
+  while ((c=getopt(argc, argv, "vhalrxmd:cp:g:A:s:o:EZTBD:S:q")) != -1) {
     switch (c) 
       {
       case 'v':
@@ -89,6 +90,9 @@ int main(int argc, char *argv[]) {
         g.mwXMerge=false; break;      // do not use external multiway merge sort for computing lcp values
       case 'd':
         g.outputDA = atoi(optarg); break;  // output Document Array (for last iteration only) 
+      case 'c':
+        g.outputDA = 4; //default 
+        g.outputColors = true; break;  // output Document Array (one color for each chunk/file) 
       case 'S':
         g.outputSA = atoi(optarg); break;  // output Suffix Array (for last iteration only) 
       case 'q':

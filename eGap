@@ -58,6 +58,7 @@ def main():
   parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
   parser.add_argument('-l', '--lcp', help='compute LCP Array',action='store_true')
   parser.add_argument('-d', '--da',  help='compute Document Array',action='store_true')
+  parser.add_argument('-c', '--colors',  help='compute Document Array (one color for each chunk/file)',action='store_true')
   parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
   parser.add_argument('-q', '--qs', help='output (only for FASTQ) the quality score QS sequences permuted according to the BWT (ext: .qs)',action='store_true')
   parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
@@ -315,6 +316,7 @@ def phase2(args,logfile, logfile_name):
   if(args.v): options += "v"    # increase verbosity level
   if(args.lcp or args.trlcp>0): options += "l"  # generate (truncated) lcp
   if(args.da): options += " -d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
+  if(args.colors): options += " -c"  # output DA (in colors)
   if(args.sa): options += " -S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
   if(args.qs):  options += " -q"    # output QS (ext: .qs)
   if(args.deB>0): options += " -D{k}".format(k = args.deB)      # info for order-k de Brujin graph

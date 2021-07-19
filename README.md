@@ -91,6 +91,9 @@ Use the options:
 *-d, --da*          
   compute Document Array
   
+*-c, --colors*          
+  compute Document Array (one color for each file)
+  
 *-s, --sa*          
   compute Suffix Array
 
@@ -107,10 +110,10 @@ If you want to simultaneaouly **merge BWT files** and compute the **Document Arr
 **Example**
 
 ```sh
-./eGap -m 4096 dataset/file1.fastq -o file1 --da
-./eGap -m 4096 dataset/file2.fastq -o file2 --da
+./eGap -m 4096 --em dataset/file1.fastq -o file1 --da
+./eGap -m 4096 --em dataset/file2.fastq -o file2 --da
 
-./eGap -m 4096 --bwt -o merge file1.bwt file2.bwt --da
+./eGap -m 4096 --em --bwt -o merge file1.bwt file2.bwt --da
 ```
 
 The first two commands compute `file1.bwt`, `file1.da`, `file1.docs` and `file2.bwt`, `file2.da`, `file2.docs` which are used by the third command to compute `merge.bwt`, `merge.da`, and `merge.docs`

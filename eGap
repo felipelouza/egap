@@ -235,6 +235,8 @@ def check_input(args):
     if(ext != "fastq" and ext != "fq"):
         print("You can use --qs only for FASTQ files")
         sys.exit(1) 
+  if(args.colors): 
+      args.da = True
 
 # phase1:
 # concatenation or computation of bwts 

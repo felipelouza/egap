@@ -96,7 +96,7 @@ bool readBWTsingle(char *path, g_data *g)
       if(r!=1) die(__func__);
       g->bwtDocs[i] = sum;
       sum+=docs;
-      printf("--> %zu\n",  docs);
+      //printf("--> %zu\n",  docs);
     }
     fclose(f);
     f = fopen(filename,"wb");
@@ -456,7 +456,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
         da_value=currentColor;
       else
         da_value+=g->bwtDocs[currentColor];
-      printf("%d (%d)\n", da_value, currentColor);
+      //printf("%d (%d)\n", da_value, currentColor);
       //if(fputc(currentColor, daOutFile)==EOF)
       if(fwrite(&da_value, g->outputDA, 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   

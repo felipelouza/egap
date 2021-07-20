@@ -284,6 +284,18 @@ static FILE *openDAFile(g_data *g)
   return f;
 }
 
+static FILE *openColorFile(g_data *g)
+{
+  char filename[Filename_size];
+
+  if(g->verbose>1) puts("Writing Document Array (Colors)");
+  assert(g->outputColors);
+  snprintf(filename,Filename_size,"%s.%d.%s",g->outPath,g->outputColors,COLORS_EXT);
+  FILE *f = fopen(filename,"wb");
+  if(f==NULL) die("Error opening Document array (colores) file");
+  return f;
+}
+
 static FILE *openSAFile(g_data *g)
 {
   char filename[Filename_size];
@@ -396,6 +408,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   if(sizeof(symbol)>sizeof(palette)) die("Sorry, alphabet is too large (mergeBWT128ext");
   assert(!g->lcpMerge && g->extMem && g->numBwt<=128);
   FILE *daOutFile=NULL;
+  FILE *colorsOutFile=NULL;
   FILE *saOutFile=NULL;
   FILE *qsOutFile=NULL;
   check_g_data(g);
@@ -404,6 +417,8 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     saOutFile = openSAFile(g);
   if(g->outputDA && lastRound)
     daOutFile = openDAFile(g);  
+  if(g->outputColors && lastRound)
+    colorsOutFile = openColorFile(g);  
   if(g->outputQS && lastRound)
     qsOutFile = openQSFile(g);
 
@@ -452,15 +467,17 @@ void mergeBWT128ext(g_data *g, bool lastRound)
       int da_value=0;
       int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
       if(e!=1) die(__func__);
-      if(g->outputColors)
-        da_value=currentColor;
-      else
-        da_value+=g->bwtDocs[currentColor];
+      da_value+=g->bwtDocs[currentColor];
       //printf("%d (%d)\n", da_value, currentColor);
       //if(fputc(currentColor, daOutFile)==EOF)
       if(fwrite(&da_value, g->outputDA, 1, daOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Document Array file");   
       //printf("%d ==> %d\n", currentColor, da_value);
+    } 
+    if(g->outputColors && lastRound){ 
+      int da_value=currentColor;
+      if(fwrite(&da_value, g->outputColors, 1, colorsOutFile)==EOF)
+        die("mergeBWT128ext: Error writing to Document Array (Color) file");   
     } 
     if(g->outputQS && lastRound){ 
       symbol qs_value=0;
@@ -500,6 +517,10 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   if(g->outputDA && lastRound){
     if(fclose(daOutFile)!=0) die("mergeBWT128ext: Error closing Document Array file");   
     remove(g->dafname);
+  }
+  //close DA (color) file
+  if(g->outputColors && lastRound){
+    if(fclose(colorsOutFile)!=0) die("mergeBWT128ext: Error closing Document Array (Color) file");   
   }
   // close QS file 
   if(g->outputQS && lastRound){

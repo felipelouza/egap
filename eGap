@@ -58,12 +58,13 @@ def main():
   parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
   parser.add_argument('-l', '--lcp', help='compute LCP Array',action='store_true')
   parser.add_argument('-d', '--da',  help='compute Document Array',action='store_true')
-  parser.add_argument('-c', '--colors',  help='compute Document Array (one color for each chunk/file)',action='store_true')
+  parser.add_argument('-c', '--cda',  help='compute colored Document Array (one color for each chunk/file)',action='store_true')
   parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
   parser.add_argument('-q', '--qs', help='output (only for FASTQ) the quality score QS sequences permuted according to the BWT (ext: .qs)',action='store_true')
   parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
   parser.add_argument('--dbytes', help='bytes x DA entry (def. 4)', default=4, type=int)  
+  parser.add_argument('--cbytes', help='bytes x DA (color) entry (def. 4)', default=4, type=int)  
   parser.add_argument('--sbytes', help='bytes x SA entry (def. 4)', default=4, type=int)  
   parser.add_argument('--trlcp', help='compute LCP values only up to TRLCP (truncated LCP)', default=0, type=int)
   parser.add_argument('--deB', help='compute info for building a deBruijn graph of order DEB', default=0, type=int)
@@ -150,6 +151,9 @@ def main():
       if args.da:
         digest = file_digest("{f}.{n}.da".format(f=args.basename,n=args.dbytes),logfile)
         print("DA  {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+      if args.cda:
+        digest = file_digest("{f}.{n}.cda".format(f=args.basename,n=args.cbytes),logfile)
+        print("cDA {exe}: {digest}".format(exe=shasum_exe, digest=digest))
       if args.sa:
         digest = file_digest("{f}.{n}.sa".format(f=args.basename,n=args.sbytes),logfile)
         print("SA  {exe}: {digest}".format(exe=shasum_exe, digest=digest))
@@ -211,6 +215,9 @@ def check_input(args):
   if args.dbytes!=1 and args.dbytes!=2 and args.dbytes!=4:
     print("The number of bytes for DA entry must be 1, 2 or 4")
     sys.exit(1)
+  if args.cbytes!=1 and args.cbytes!=2 and args.cbytes!=4:
+    print("The number of bytes for DA (color) entry must be 1, 2 or 4")
+    sys.exit(1)
   if args.sbytes!=1 and args.sbytes!=2 and args.sbytes!=4:
     print("The number of bytes for SA entry must be 1, 2 or 4")
     sys.exit(1)
@@ -235,8 +242,6 @@ def check_input(args):
     if(ext != "fastq" and ext != "fq"):
         print("You can use --qs only for FASTQ files")
         sys.exit(1) 
-  if(args.colors): 
-      args.da = True
 
 # phase1:
 # concatenation or computation of bwts 
@@ -318,7 +323,7 @@ def phase2(args,logfile, logfile_name):
   if(args.v): options += "v"    # increase verbosity level
   if(args.lcp or args.trlcp>0): options += "l"  # generate (truncated) lcp
   if(args.da): options += " -d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
-  if(args.colors): options += " -c"  # output DA (in colors)
+  if(args.cda): options += " -c{byts}".format(byts = args.cbytes)   # output cDA (DA in colors)
   if(args.sa): options += " -S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
   if(args.qs):  options += " -q"    # output QS (ext: .qs)
   if(args.deB>0): options += " -D{k}".format(k = args.deB)      # info for order-k de Brujin graph

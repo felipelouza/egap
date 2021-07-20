@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
   g.outputQS = 0;
   g.dbOrder = 0;           // order for deBruijn graph 
   int num_threads = 0;
-  while ((c=getopt(argc, argv, "vhalrxmd:cp:g:A:s:o:EZTBD:S:q")) != -1) {
+  while ((c=getopt(argc, argv, "vhalrxmd:c:p:g:A:s:o:EZTBD:S:q")) != -1) {
     switch (c) 
       {
       case 'v':
@@ -91,8 +91,7 @@ int main(int argc, char *argv[]) {
       case 'd':
         g.outputDA = atoi(optarg); break;  // output Document Array (for last iteration only) 
       case 'c':
-        if(g.outputDA==0) g.outputDA = 4; //default 
-        g.outputColors = true; break;  // output Document Array (one color for each chunk/file) 
+        g.outputColors = atoi(optarg); break;  // output Document Array (one color for each chunk/file) 
       case 'S':
         g.outputSA = atoi(optarg); break;  // output Suffix Array (for last iteration only) 
       case 'q':

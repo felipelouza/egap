@@ -91,8 +91,8 @@ Use the options:
 *-d, --da*          
   compute Document Array
   
-*-c, --colors*          
-  compute Document Array (one color for each file)
+*-c, --cda*          
+  compute colored Document Array (one color for each file)
   
 *-s, --sa*          
   compute Suffix Array

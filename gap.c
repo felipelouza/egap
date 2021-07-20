@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
       case 'd':
         g.outputDA = atoi(optarg); break;  // output Document Array (for last iteration only) 
       case 'c':
-        g.outputDA = 4; //default 
+        if(g.outputDA==0) g.outputDA = 4; //default 
         g.outputColors = true; break;  // output Document Array (one color for each chunk/file) 
       case 'S':
         g.outputSA = atoi(optarg); break;  // output Suffix Array (for last iteration only) 

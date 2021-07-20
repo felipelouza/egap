@@ -100,6 +100,9 @@ Use the options:
 *--dbytes*      
   number of bytes for each DA entry (def. 4)
 
+*--cbytes*      
+  number of bytes for each colored DA entry (def. 4)
+  
 *--sbytes*      
   number of bytes for each SA entry (def. 4)
 

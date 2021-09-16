@@ -109,6 +109,8 @@ typedef uint32_t palette;
 #define DA_BL_EXT "da_bl"
 #define SA_EXT "sa"
 #define SA_BL_EXT "sa_bl"
+#define SL_EXT "sl"
+#define SL_BL_EXT "sl_bl"
 #define QS_EXT "bwt.qs"
 #define QS_BL_EXT "bwt.qs_bl"
 
@@ -141,6 +143,7 @@ typedef struct {
   int outputDA;            // if > 0 output Merge array (=Document Array) for last iteration using outputDA bytes per symbol
   int outputColors;        // if > 0 output Merge array (=Color Array) for last iteration using outputColors bytes per symbol
   int outputSA;            // if > 0 output Merge array (=Suffix Array) for last iteration using outputSA bytes per symbol
+  int outputSL;            // if > 0 output Merge array (=Suffixes' lengths) for last iteration using outputSL bytes per symbol
   int outputQS;            // if 1 output Merge array (=QS) for last iteration using 1 bytes per symbol
   FILE *unsortedLcp;       // if !NULL file containing unsorted LCP values
   FILE *unsortedLcp_size;  // if !NULL file containing the size of sorted blocks in unsorted_Lcp
@@ -163,10 +166,12 @@ typedef struct {
   char bwfname[Filename_size];   // filename of the input bwt file 
   char dafname[Filename_size];   // filename of the input DA file 
   char safname[Filename_size];   // filename of the input SA file 
+  char slfname[Filename_size];   // filename of the input SA file 
   char qsfname[Filename_size];   // filename of the input QS file 
   FILE **bwf;              // bwf[0] ... bwf[numBwt-1] are pointer inside the input bwt file  
   FILE **daf;              // daf[0] ... daf[numBwt-1] are pointer inside the input DA file  
   FILE **saf;              // saf[0] ... saf[numBwt-1] are pointer inside the input SA file  
+  FILE **slf;              // slf[0] ... slf[numBwt-1] are pointer inside the input SL file  
   FILE **qsf;              // qsf[0] ... qsf[numBwt-1] are pointer inside the input QS file  
   FILE *fmergeColor;       // mergecolor file   
   cwriter *fnewMergeColor; // newmergecolor files (one per symbol) 

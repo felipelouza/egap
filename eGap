@@ -58,14 +58,16 @@ def main():
   parser.add_argument('-b', '--bwt', help='inputs are bwt files',action='store_true')
   parser.add_argument('-l', '--lcp', help='compute LCP Array',action='store_true')
   parser.add_argument('-d', '--da',  help='compute Document Array',action='store_true')
-  parser.add_argument('-c', '--cda',  help='compute colored Document Array (one color for each chunk/file)',action='store_true')
-  parser.add_argument('-s', '--sa', help='output SA (ext: .sa)',action='store_true')
-  parser.add_argument('-q', '--qs', help='output (only for FASTQ) the quality score QS sequences permuted according to the BWT (ext: .qs)',action='store_true')
+  parser.add_argument('-c', '--cda', help='compute colored Document Array (one color for each chunk/file)',action='store_true')
+  parser.add_argument('-s', '--sa',  help='output SA (ext: .sa)',action='store_true')
+  parser.add_argument('--sl',        help='output suffixes\' lengths (ext: .sl)',action='store_true')
+  parser.add_argument('-q', '--qs',  help='output (only for FASTQ) the quality score QS sequences permuted according to the BWT (ext: .qs)',action='store_true')
   parser.add_argument('-r', '--rev', help='compute data structures for the reversed string',action='store_true')
   parser.add_argument('--lbytes', help='bytes x LCP entry (def. 2)', default=2, type=int)  
   parser.add_argument('--dbytes', help='bytes x DA entry (def. 4)', default=4, type=int)  
   parser.add_argument('--cbytes', help='bytes x DA (color) entry (def. 4)', default=4, type=int)  
   parser.add_argument('--sbytes', help='bytes x SA entry (def. 4)', default=4, type=int)  
+  parser.add_argument('--slbytes', help='bytes x SL entry (def. 4)', default=4, type=int)  
   parser.add_argument('--trlcp', help='compute LCP values only up to TRLCP (truncated LCP)', default=0, type=int)
   parser.add_argument('--deB', help='compute info for building a deBruijn graph of order DEB', default=0, type=int)
   parser.add_argument('--sum', help='compute output files shasum',action='store_true')
@@ -157,6 +159,9 @@ def main():
       if args.sa:
         digest = file_digest("{f}.{n}.sa".format(f=args.basename,n=args.sbytes),logfile)
         print("SA  {exe}: {digest}".format(exe=shasum_exe, digest=digest))
+      if args.sl:
+        digest = file_digest("{f}.{n}.sl".format(f=args.basename,n=args.slbytes),logfile)
+        print("SL  {exe}: {digest}".format(exe=shasum_exe, digest=digest))
     # -------- delete output files if required 
     if (args.sum and args.delete):
       try:
@@ -197,6 +202,9 @@ def check_input(args):
       sys.exit(1)
     if (args.sa):
       print("SA construction not supported for merging BWT files!")
+      sys.exit(1)
+    if (args.sl):
+      print("SL construction not supported for merging BWT files!")
       sys.exit(1)
     args.basename = args.out
   # ---- if the input are concatenated texts there is a single file
@@ -293,6 +301,7 @@ def phase1(args,logfile, logfile_name):
     if(args.v):   options += "v"    # increase verbosity level
     if(args.rev): options += "R"    # reverse string as input 
     if(args.sa):  options += " -s{byts}".format(byts = args.sbytes)    # output SA (ext: .sa)
+    if(args.sl):  options += " -l{byts}".format(byts = args.slbytes)    # output SL (ext: .sl)
     if(args.da):  options += " -d{byts}".format(byts = args.dbytes)    # output DA (ext: .da)
     if(args.qs):  options += " -q"    # output QS (ext: .qs)
     command = "{exe} {opts} -m {mem} {output} {ifile} 0".format(exe=exe, 
@@ -325,6 +334,7 @@ def phase2(args,logfile, logfile_name):
   if(args.da): options += " -d{byts}".format(byts = args.dbytes)  # output DA (ext: .da)
   if(args.cda): options += " -c{byts}".format(byts = args.cbytes)   # output cDA (DA in colors)
   if(args.sa): options += " -S{byts}".format(byts = args.sbytes)  # output SA (ext: .sa)
+  if(args.sl): options += " -L{byts}".format(byts = args.slbytes)  # output SA (ext: .sa)
   if(args.qs):  options += " -q"    # output QS (ext: .qs)
   if(args.deB>0): options += " -D{k}".format(k = args.deB)      # info for order-k de Brujin graph
   if(args.trlcp>0): options += " -D{k}".format(k = args.trlcp)  # info for truncated LCP

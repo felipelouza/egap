@@ -97,6 +97,9 @@ Use the options:
 *-s, --sa*          
   compute Suffix Array
 
+*--sl*          
+  output suffixes' lengths (SL)
+
 *--dbytes*      
   number of bytes for each DA entry (def. 4)
 
@@ -105,6 +108,9 @@ Use the options:
   
 *--sbytes*      
   number of bytes for each SA entry (def. 4)
+
+*--slbytes*      
+  number of bytes for each SL entry (def. 4)
 
 ### Document array requirements
 

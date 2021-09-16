@@ -67,6 +67,38 @@ void close_sa_files(g_data *g) {
 /******************************************************************************/
 
 // open a file for each input BWT, file pointers are stored to bwf[] 
+void open_sl_files(g_data *g) {
+  assert(g->extMem);
+  g->slf = malloc(g->numBwt*sizeof(FILE *));
+  if(g->slf==NULL) die(__func__);
+  for(int i=0; i< g->numBwt; i++) {
+    g->slf[i] = fopen(g->slfname,"r");
+    if(!g->slf[i]) die(__func__);
+  }
+}
+
+// use bws[] to make slf[i] point at the beginning of sl[i]  
+void rewind_sl_files(g_data *g) {
+  assert(g->extMem);
+  for(int i=0; i< g->numBwt; i++) {
+    int e = fseek(g->slf[i],(g->outputSL)*(g->bws[i]-g->bws[0]+g->symb_offset),SEEK_SET);
+    if(e!=0) die(__func__);
+  }
+}
+
+// close slf[i] files  
+void close_sl_files(g_data *g) {
+  assert(g->extMem);
+  for(int i=0; i< g->numBwt; i++) {
+    int e = fclose(g->slf[i]);
+    if(e!=0) die(__func__);
+  }
+  free(g->slf);
+}
+
+/******************************************************************************/
+
+// open a file for each input BWT, file pointers are stored to bwf[] 
 void open_qs_files(g_data *g) {
   assert(g->extMem);
   g->qsf = malloc(g->numBwt*sizeof(FILE *));

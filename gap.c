@@ -70,10 +70,11 @@ int main(int argc, char *argv[]) {
   g.outputDA = 0;
   g.outputColors = 0;
   g.outputSA = 0;
+  g.outputSL = 0;
   g.outputQS = 0;
   g.dbOrder = 0;           // order for deBruijn graph 
   int num_threads = 0;
-  while ((c=getopt(argc, argv, "vhalrxmd:c:p:g:A:s:o:EZTBD:S:q")) != -1) {
+  while ((c=getopt(argc, argv, "vhalrxmd:c:p:g:A:s:o:EZTBD:S:qL:")) != -1) {
     switch (c) 
       {
       case 'v':
@@ -94,6 +95,8 @@ int main(int argc, char *argv[]) {
         g.outputColors = atoi(optarg); break;  // output Document Array (one color for each chunk/file) 
       case 'S':
         g.outputSA = atoi(optarg); break;  // output Suffix Array (for last iteration only) 
+      case 'L':
+        g.outputSL = atoi(optarg); break;  // output Suffixes' lengths (for last iteration only) 
       case 'q':
         g.outputQS = 1; break;  // output QS permuted according to the BWT (for last iteration only) 
       case 'm':
@@ -220,14 +223,14 @@ int main(int argc, char *argv[]) {
   bool something_to_do = readBWTsingle(path, &g);
   
   if(g.numBwt> group_size) { // multiround computation required
-    if(g.outputDA>0 || g.outputSA>0 || g.outputQS>0) {
-      puts("Sorry, multiround DA, SA or QS computation not supported");
+    if(g.outputDA>0 || g.outputSA>0 || g.outputQS>0 || g.outputSL>0) {
+      puts("Sorry, multiround DA, SA, QS or SL computation not supported");
       exit(EXIT_FAILURE);
     }
   }
   if(g.mmapBWT) { 
-    if(g.outputDA>0 || g.outputSA>0 || g.outputQS>0) {
-      puts("Sorry, internal memory DA, SA or QS computation not supported");
+    if(g.outputDA>0 || g.outputSA>0 || g.outputQS>0 || g.outputSL>0) {
+      puts("Sorry, internal memory DA, SA, QS or SL computation not supported");
       exit(EXIT_FAILURE);
     }
   }

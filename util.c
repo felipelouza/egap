@@ -76,6 +76,14 @@ bool readBWTsingle(char *path, g_data *g)
       if(rename(tmp1,tmp2)!=0)
         die("Cannot rename QS file");
     }
+    if(g->outputSL) { // if there is a single (multi)-bwt the SL does not change
+      char tmp1[Filename_size];
+      char tmp2[Filename_size];
+      snprintf(tmp1,Filename_size,"%s.%d.%s",path,g->outputSL, SL_BL_EXT);
+      snprintf(tmp2,Filename_size,"%s.%d.%s",path,g->outputSL, SL_EXT);
+      if(rename(tmp1,tmp2)!=0)
+        die("Cannot rename SL file");
+    }
     size_t size;
     size_t r = fread(&size, 8, 1, f);// sizes are stored in 64 bits 
     if(r!=1) die(__func__);
@@ -320,6 +328,18 @@ static FILE *openQSFile(g_data *g)
   return f;
 }
 
+static FILE *openSLFile(g_data *g)
+{
+  char filename[Filename_size];
+
+  if(g->verbose>1) puts("Writing Suffix Array");
+  assert(g->outputSL);
+  snprintf(filename,Filename_size,"%s.%d.%s",g->outPath,g->outputSL,SL_EXT);
+  FILE *f = fopen(filename,"wb");
+  if(f==NULL) die("Error opening Suffixes' lengths file");
+  return f;
+}
+
 // use g->mergeColor to merge bwt (and LCP) values 
 // used by gap gap16 and hm
 void mergeBWTandLCP(g_data *g, bool lastRound)
@@ -410,11 +430,16 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   FILE *daOutFile=NULL;
   FILE *colorsOutFile=NULL;
   FILE *saOutFile=NULL;
+  FILE *slOutFile=NULL;
   FILE *qsOutFile=NULL;
+
   check_g_data(g);
   array_clear(g->inCnt,g->numBwt,0);
+
   if(g->outputSA && lastRound)
     saOutFile = openSAFile(g);
+  if(g->outputSL && lastRound)
+    slOutFile = openSLFile(g);
   if(g->outputDA && lastRound)
     daOutFile = openDAFile(g);  
   if(g->outputColors && lastRound)
@@ -429,6 +454,11 @@ void mergeBWT128ext(g_data *g, bool lastRound)
     snprintf(g->safname,Filename_size,"%s.%d.%s",g->outPath,g->outputSA, SA_BL_EXT);
     open_sa_files(g);
     rewind_sa_files(g);   // set file pointers at the beginning of each SA
+  }
+  if(g->outputSL && lastRound){
+    snprintf(g->slfname,Filename_size,"%s.%d.%s",g->outPath,g->outputSL, SL_BL_EXT);
+    open_sl_files(g);
+    rewind_sl_files(g);   // set file pointers at the beginning of each SL
   }
   if(g->outputDA && lastRound){
     snprintf(g->dafname,Filename_size,"%s.%d.%s",g->outPath,g->outputDA, DA_BL_EXT);
@@ -463,6 +493,13 @@ void mergeBWT128ext(g_data *g, bool lastRound)
       if(fwrite(&sa_value, g->outputSA, 1, saOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Suffix Array file");   
     } 
+    if(g->outputSL && lastRound){ 
+      int sl_value=0;
+      int e = fread(&sl_value, g->outputSL, 1, g->slf[currentColor]);
+      if(e!=1) die(__func__);
+      if(fwrite(&sl_value, g->outputSL, 1, slOutFile)==EOF)
+        die("mergeBWT128ext: Error writing to Suffix Array file");   
+    } 
     if(g->outputDA && lastRound){ 
       int da_value=0;
       int e = fread(&da_value, g->outputDA, 1, g->daf[currentColor]);
@@ -494,6 +531,7 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   }  
   close_bw_files(g);
   if(g->outputSA  && lastRound) close_sa_files(g);
+  if(g->outputSL  && lastRound) close_sl_files(g);
   if(g->outputDA  && lastRound) close_da_files(g);
   if(g->outputQS  && lastRound) close_qs_files(g);
   // final check on the merging 
@@ -512,6 +550,11 @@ void mergeBWT128ext(g_data *g, bool lastRound)
   if(g->outputSA && lastRound){
     if(fclose(saOutFile)!=0) die("mergeBWT128ext: Error closing Suffix Array file");   
     remove(g->safname);
+  }
+  // close suffixes's length file 
+  if(g->outputSL && lastRound){
+    if(fclose(slOutFile)!=0) die("mergeBWT128ext: Error closing Suffixes' Lengths file");   
+    remove(g->slfname);
   }
   // close document array file 
   if(g->outputDA && lastRound){
@@ -585,6 +628,7 @@ void mergeBWT8(g_data *g, bool lastRound)
   assert(!g->lcpMerge);
   FILE *daOutFile=NULL;
   FILE *saOutFile=NULL;
+  FILE *slOutFile=NULL;
   FILE *qsOutFile=NULL;
 
   check_g_data(g);
@@ -594,6 +638,12 @@ void mergeBWT8(g_data *g, bool lastRound)
     snprintf(g->safname,Filename_size,"%s.%d.%s",g->outPath,g->outputSA, SA_BL_EXT);
     open_sa_files(g);
     rewind_sa_files(g);   // set file pointers at the beginning of each SA
+  }
+  if(g->outputSL && lastRound){
+    slOutFile = openSLFile(g);    
+    snprintf(g->slfname,Filename_size,"%s.%d.%s",g->outPath,g->outputSL, SL_BL_EXT);
+    open_sl_files(g);
+    rewind_sl_files(g);   // set file pointers at the beginning of each SL
   }
   if(g->outputDA && lastRound){
     daOutFile = openDAFile(g);    
@@ -626,6 +676,13 @@ void mergeBWT8(g_data *g, bool lastRound)
       if(e!=1) die(__func__);
       if(fwrite(&sa_value, g->outputSA, 1, saOutFile)==EOF)
         die("mergeBWT128ext: Error writing to Sufix Array file");   
+    } 
+    if(g->outputSL && lastRound){ 
+      int sl_value=0;
+      int e = fread(&sl_value, g->outputSL, 1, g->saf[currentColor]);
+      if(e!=1) die(__func__);
+      if(fwrite(&sl_value, g->outputSL, 1, slOutFile)==EOF)
+        die("mergeBWT128ext: Error writing to Sufixes' lengths file");   
     } 
     if(g->outputDA && lastRound){ 
       int da_value=0;
@@ -660,6 +717,11 @@ void mergeBWT8(g_data *g, bool lastRound)
   if(g->outputSA && lastRound){
     if(fclose(saOutFile)!=0) die("mergeBWT8: Error closing Suffix Array file");       
     remove(g->safname);
+  }
+  // close suffixes' lengths file 
+  if(g->outputSL && lastRound){
+    if(fclose(slOutFile)!=0) die("mergeBWT8: Error closing Suffixes' lengths file");       
+    remove(g->slfname);
   }
   // close document array file 
   if(g->outputDA && lastRound){

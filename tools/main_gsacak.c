@@ -43,9 +43,10 @@ void usage(char *name){
   puts("\t-h      this help message");
   puts("\t-m RAM  available memory in MB (def: no limit)");
   puts("\t-o OUT  base name for output files (def: FILE)");
-  puts("\t-l      compute LCP array as well (use only with option -s)");
+  puts("\t-L      compute LCP array as well (use only with option -s)");
   puts("\t-c      check SA and LCP");
   puts("\t-s      output SA (ext: .sa) and possibly LCP (ext: .sa_lcp)");
+  puts("\t-l      output suffix lengths (ext: .sl)");
   puts("\t-q      output QS sequences permuted according to the BWT (ext: .qs)");
   puts("\t-b      output BWT (ext: .bwt)");
   puts("\t-r      output RLE(BWT) (ext: .rle.bwt)");
@@ -67,22 +68,24 @@ int main(int argc, char** argv){
   extern int optind, opterr, optopt;
   
   // parse command line
-  int VALIDATE=0, OutputSA=0, LCP_COMPUTE=0, DA_COMPUTE=0, ComputeQS=0;
+  int VALIDATE=0, OutputSA=0, OutputSL=0, LCP_COMPUTE=0, DA_COMPUTE=0, ComputeQS=0;
   int_t k=0;
   int Verbose=0, OutputGapLcp=0, OutputBwt=0, OutputDA=0, Extract=0, Reversed=0, c; // len_file=0;
   char *c_file=NULL, *outfile=NULL;
   size_t RAM=0;
 
-  while ((c=getopt(argc, argv, "cs:lvXbrg:hm:o:Rd:q")) != -1) {
+  while ((c=getopt(argc, argv, "cs:l:LvXbrg:hm:o:Rd:q")) != -1) {
     switch (c) 
       {
       case 'c':
         VALIDATE=1; break;          // validate output
       case 's':
         OutputSA=atoi(optarg); break;   // output SA 
+      case 'l':
+        OutputSL=atoi(optarg); DA_COMPUTE=1; break;   // output SL
       case 'q':
         ComputeQS=1; break;         // output QS
-      case 'l':
+      case 'L':
         LCP_COMPUTE=1;  break;      // compute LCP 
       case 'v':
         Verbose++; break;
@@ -192,7 +195,7 @@ int main(int argc, char** argv){
   }
 
   // files used for multi BWT, LCP and their lengths 
-  FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL, *f_da = NULL, *f_sa = NULL, *f_qs = NULL;
+  FILE *f_cat = NULL, *f_len = NULL, *f_bwt = NULL, *f_lcp = NULL, *f_da = NULL, *f_sa = NULL, *f_sl = NULL, *f_qs = NULL;
   FILE *f_size = NULL; //size of each chunk
   FILE *f_docs = NULL; //number of documents in each chunk
 
@@ -219,7 +222,7 @@ int main(int argc, char** argv){
     f_lcp = file_open(s, "wb");
   }
 
-  if(DA_COMPUTE) {
+  if(OutputDA) {
     char s[500]; 
     snprintf(s,500,"%s.%d.da_bl",outfile,OutputDA); 
     f_da = file_open(s, "wb");
@@ -231,6 +234,12 @@ int main(int argc, char** argv){
     char s[500]; 
     snprintf(s,500,"%s.%d.sa_bl",outfile,OutputSA); 
     f_sa = file_open(s, "wb");
+  }
+
+  if(OutputSL) {
+    char s[500]; 
+    snprintf(s,500,"%s.%d.sl_bl",outfile,OutputSL); 
+    f_sl = file_open(s, "wb");
   }
 
   if(ComputeQS) {
@@ -335,6 +344,11 @@ int main(int argc, char** argv){
       DA = (int_t*) malloc(len*sizeof(int_t));
       for(i=0; i<len; i++) DA[i]=0;
     }
+    int_t *SL = NULL;
+    if(OutputSL){
+      SL = (int_t*) malloc(len*sizeof(int_t));
+      for(i=0; i<len; i++) SL[i]=0;
+    }
     
     if(Verbose)
       time_start(&t_start, &c_start);
@@ -378,17 +392,25 @@ int main(int argc, char** argv){
     }
 
     // output DA alone
-    if(DA_COMPUTE){
+    if(OutputDA){
       //for(i=0; i<len; i++) DA[i]+=curr;
       size_t docs = K[bl];
       fwrite(&docs, sizeof(size_t), 1, f_docs);
       //printf("curr = %" PRIdN "\n", K[bl]);
       file_write_array(f_da, DA+1, len-1, OutputDA);//ignore the first DA-value
     }
+        
+    if(OutputSL){
+      for(i=0; i<len; i++) SL[i] = SA[DA[i]+1]-SA[i]+1;
+      file_write_array(f_sl, SL+1, len-1, OutputSL);//if DA is not computed SL = {0, 0, ..., 0}
+      #if DEBUG 
+        for(i=1; i<min(20,len); i++)printf("%" PRIdN ") %" PRIdN "\t%" PRIdN "\t%" PRIdN "\n", i, SA[i], (int_t) (DA[i]+curr), SL[i]);
+      #endif
+    }
 
     if(Verbose>2) {
       if(LCP_COMPUTE) lcp_array_print((unsigned char*)str, SA, LCP, min(20,len), sizeof(char)); 
-      else suffix_array_print((unsigned char*)str, SA, min(10,len), sizeof(char));
+      else suffix_array_print((unsigned char*)str, SA, min(20,len), sizeof(char));
     }
   
     // validate 
@@ -461,6 +483,7 @@ int main(int argc, char** argv){
     free(SA);
     if(LCP_COMPUTE) free(LCP);
     if(DA_COMPUTE) free(DA);
+    if(OutputSL) free(SL);
     
     curr+=K[bl];
     sum+=len-1;
@@ -488,9 +511,13 @@ int main(int argc, char** argv){
     fclose(f_lcp);
   }
 
-  if(DA_COMPUTE){
+  if(OutputDA){
     fclose(f_da);
     fclose(f_docs);
+  }
+
+  if(OutputSL){
+    fclose(f_sl);
   }
 
   if(OutputSA){
